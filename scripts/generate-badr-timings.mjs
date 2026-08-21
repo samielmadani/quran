@@ -5,6 +5,7 @@ const root = resolve(import.meta.dirname, '..');
 const sourceDirectory = resolve(root, 'data/badr-al-turki');
 const quranPath = resolve(root, 'node_modules/quran-json/dist/quran.json');
 const outputPath = resolve(root, 'src/data/badrAlTurkiTimings.ts');
+const nativeOutputPath = resolve(root, 'public/data/badrAlTurkiTimings.json');
 
 function readVarint(buffer, state) {
   let value = 0;
@@ -82,7 +83,16 @@ for (let surah = 1; surah <= 114; surah += 1) {
   allTimings[surah] = parseSurah(readFileSync(resolve(sourceDirectory, filename)), surah);
 }
 
+const bismillahEndMs = allTimings[1][2].startMs;
+for (let surah = 2; surah <= 114; surah += 1) {
+  if (surah !== 9) {
+    allTimings[surah][0] = { startMs: 0, endMs: bismillahEndMs };
+  }
+}
+
 mkdirSync(dirname(outputPath), { recursive: true });
 const output = `import type { AyahTiming } from '../types/audio';\n\nexport const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = ${JSON.stringify(allTimings, null, 2)};\n`;
 writeFileSync(outputPath, output);
+mkdirSync(dirname(nativeOutputPath), { recursive: true });
+writeFileSync(nativeOutputPath, `${JSON.stringify(allTimings)}\n`);
 console.log(`Generated ${Object.keys(allTimings).length} surahs and ${Object.values(allTimings).reduce((sum, surah) => sum + Object.keys(surah).length, 0)} ayahs`);

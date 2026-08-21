@@ -1,11 +1,11 @@
-export interface QuranAudioInitOptions {
-  surah?: number;
-  ayah?: number;
-}
+import { registerPlugin, type PluginListenerHandle } from '@capacitor/core';
 
 export interface QuranAudioEvent {
   surah: number;
   ayah: number;
+  playing?: boolean;
+  positionMs?: number;
+  durationMs?: number;
 }
 
 export interface QuranAudioApi {
@@ -17,17 +17,19 @@ export interface QuranAudioApi {
   previousAyah: () => Promise<void>;
   seekTo: (positionMs: number) => Promise<void>;
   getState: () => Promise<{ playing: boolean; surah: number; ayah: number; positionMs: number; durationMs: number }>;
-  addListener: (eventName: string, listener: (event: QuranAudioEvent) => void) => { remove: () => void };
+  addListener: (eventName: string, listener: (event: QuranAudioEvent) => void) => Promise<PluginListenerHandle>;
 }
 
-export const QuranAudio: QuranAudioApi = {
-  initialize: async () => undefined,
-  playAyah: async () => undefined,
-  pause: async () => undefined,
-  resume: async () => undefined,
-  nextAyah: async () => undefined,
-  previousAyah: async () => undefined,
-  seekTo: async () => undefined,
-  getState: async () => ({ playing: false, surah: 1, ayah: 1, positionMs: 0, durationMs: 0 }),
-  addListener: () => ({ remove: () => undefined }),
-};
+export const QuranAudio = registerPlugin<QuranAudioApi>('QuranAudio', {
+  web: () => ({
+    initialize: async () => undefined,
+    playAyah: async () => undefined,
+    pause: async () => undefined,
+    resume: async () => undefined,
+    nextAyah: async () => undefined,
+    previousAyah: async () => undefined,
+    seekTo: async () => undefined,
+    getState: async () => ({ playing: false, surah: 1, ayah: 1, positionMs: 0, durationMs: 0 }),
+    addListener: async () => ({ remove: async () => undefined }),
+  }),
+});

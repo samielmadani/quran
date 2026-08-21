@@ -9,6 +9,8 @@ export function useQuranApp() {
   const [currentSurah, setCurrentSurah] = useState(DEFAULT_SURAH);
   const [currentAyah, setCurrentAyah] = useState(DEFAULT_AYAH);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [positionMs, setPositionMs] = useState(0);
+  const [durationMs, setDurationMs] = useState(0);
   const [textSize, setTextSize] = useState(2.8);
   const [autoScroll, setAutoScroll] = useState(true);
   const [surahListOpen, setSurahListOpen] = useState(false);
@@ -17,15 +19,21 @@ export function useQuranApp() {
   const surahs = useMemo(() => quranService.getSurahs(), []);
 
   useEffect(() => {
+    const unsubscribe = audioService.subscribe((nextState) => {
+      setCurrentSurah(nextState.surah);
+      setCurrentAyah(nextState.ayah);
+      setIsPlaying(nextState.playing);
+      setPositionMs(nextState.positionMs);
+      setDurationMs(nextState.durationMs);
+    });
+    void audioService.initialize();
     const state = audioService.getState();
     setCurrentSurah(state.surah);
     setCurrentAyah(state.ayah);
     setIsPlaying(state.playing);
-    return audioService.subscribe((nextState) => {
-      setCurrentSurah(nextState.surah);
-      setCurrentAyah(nextState.ayah);
-      setIsPlaying(nextState.playing);
-    });
+    setPositionMs(state.positionMs);
+    setDurationMs(state.durationMs);
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -39,7 +47,7 @@ export function useQuranApp() {
       return;
     }
 
-    const targetTop = target.offsetTop - (reading.clientHeight - target.offsetHeight) / 2;
+    const targetTop = target.getBoundingClientRect().top - reading.getBoundingClientRect().top + reading.scrollTop - (reading.clientHeight - target.offsetHeight) / 2;
     reading.scrollTo({
       top: Math.max(0, targetTop),
       behavior: 'smooth',
@@ -69,17 +77,17 @@ export function useQuranApp() {
     const nextAyah = currentAyah + 1;
 
     if (nextAyah <= surah.totalAyahs) {
-      setCurrentAyah(nextAyah);
       await audioService.playAyah({ surah: currentSurah, ayah: nextAyah });
+      setCurrentAyah(nextAyah);
       setIsPlaying(true);
       return;
     }
 
     const nextSurah = Math.min(currentSurah + 1, surahs.length);
     const targetSurah = quranService.getSurah(nextSurah);
+    await audioService.playAyah({ surah: nextSurah, ayah: 1 });
     setCurrentSurah(nextSurah);
     setCurrentAyah(1);
-    await audioService.playAyah({ surah: nextSurah, ayah: 1 });
     setIsPlaying(true);
     if (targetSurah.totalAyahs < 1) {
       setCurrentAyah(1);
@@ -89,8 +97,8 @@ export function useQuranApp() {
   const handlePreviousAyah = async () => {
     if (currentAyah > 1) {
       const previousAyah = currentAyah - 1;
-      setCurrentAyah(previousAyah);
       await audioService.playAyah({ surah: currentSurah, ayah: previousAyah });
+      setCurrentAyah(previousAyah);
       setIsPlaying(true);
       return;
     }
@@ -98,9 +106,9 @@ export function useQuranApp() {
     if (currentSurah > 1) {
       const previousSurah = currentSurah - 1;
       const targetSurah = quranService.getSurah(previousSurah);
+      await audioService.playAyah({ surah: previousSurah, ayah: targetSurah.totalAyahs });
       setCurrentSurah(previousSurah);
       setCurrentAyah(targetSurah.totalAyahs);
-      await audioService.playAyah({ surah: previousSurah, ayah: targetSurah.totalAyahs });
       setIsPlaying(true);
     }
   };
@@ -110,6 +118,8 @@ export function useQuranApp() {
     currentSurah,
     currentAyah,
     isPlaying,
+    positionMs,
+    durationMs,
     textSize,
     autoScroll,
     surahListOpen,

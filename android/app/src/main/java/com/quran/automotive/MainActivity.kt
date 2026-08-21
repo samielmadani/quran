@@ -1,11 +1,11 @@
 package com.quran.automotive
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import com.getcapacitor.BridgeActivity
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BridgeActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        registerPlugin(QuranAudioPlugin::class.java)
     }
 }
