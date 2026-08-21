@@ -1,0 +1,18 @@
+{
+  "name": "Quran Automotive",
+  "short_name": "Quran",
+  "description": "Offline Quran reader and Badr Al-Turki recitation player for automotive head units.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "/icons.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

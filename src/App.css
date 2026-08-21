@@ -1,0 +1,163 @@
+.quran-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #0a0d12;
+  color: #f8f1e6;
+}
+
+.quran-reading {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.65rem 0.9rem 0.85rem;
+  background: linear-gradient(180deg, #0a0d12 0%, #111922 100%);
+  scrollbar-width: thin;
+}
+
+.ayah {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: right;
+  border: none;
+  background: transparent;
+  color: #f9f1e6;
+  padding: 0.42rem 0.45rem;
+  border-radius: 0.8rem;
+  margin: 0.05rem 0;
+  font-family: 'Amiri', serif;
+  line-height: 1.95;
+  cursor: pointer;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ayah:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ayah.active {
+  background: rgba(214, 160, 74, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(214, 160, 74, 0.38);
+}
+
+.ayah-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.7rem;
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ayah-text {
+  flex: 1;
+  direction: rtl;
+  unicode-bidi: plaintext;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.22);
+}
+
+.playback-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.9rem 0.45rem;
+  background: rgba(12, 15, 20, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.playback-bar ion-button {
+  --padding-start: 0.8rem;
+  --padding-end: 0.8rem;
+  --padding-top: 0.8rem;
+  --padding-bottom: 0.8rem;
+  --border-radius: 999px;
+  --background: rgba(255, 255, 255, 0.04);
+  min-width: 3.25rem;
+  min-height: 3.25rem;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem 0.18rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(10, 12, 17, 0.95);
+}
+
+.status-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.72rem;
+  flex: 1;
+}
+
+.status-item strong {
+  color: #f7f1e7;
+  font-size: 0.96rem;
+}
+
+.status-toggle {
+  min-width: 6.5rem;
+}
+
+.status-toggle ion-button {
+  --padding-start: 0.3rem;
+  --padding-end: 0.3rem;
+  --padding-top: 0.2rem;
+  --padding-bottom: 0.2rem;
+  --color: #f4d79c;
+  font-size: 0.7rem;
+}
+
+.settings-panel {
+  padding: 0.2rem 0.9rem 0.8rem;
+  background: rgba(10, 12, 17, 0.97);
+}
+
+.settings-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
+}
+
+.app-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.title-muted {
+  font-size: 0.72rem;
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  .quran-shell {
+    height: calc(100vh - 56px);
+  }
+
+  .quran-reading {
+    padding: 0.8rem 1.25rem 1rem;
+  }
+}
+
