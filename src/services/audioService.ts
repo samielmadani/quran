@@ -101,7 +101,10 @@ export class AudioService {
       this.currentSurah = payload.surah;
       this.currentAyah = payload.ayah;
       this.pendingSeekMs = timing.startMs;
-      this.audio.currentTime = timing.startMs / 1000;
+      this.currentPositionMs = timing.startMs;
+      if (this.audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        this.audio.currentTime = timing.startMs / 1000;
+      }
       await this.audio.play();
     }
     this.playing = true;

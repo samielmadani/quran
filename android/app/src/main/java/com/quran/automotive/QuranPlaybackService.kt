@@ -87,7 +87,7 @@ class QuranPlaybackService : MediaSessionService() {
             return
         }
 
-        val audioPath = String.format(Locale.US, "asset:///public/assets/audio/%03d.mp3", surah)
+        val audioPath = String.format(Locale.US, "asset:///public/assets/audio/badr-al-turki/%03d.mp3", surah)
         val mediaItem = MediaItem.Builder().setUri(audioPath).setMediaId(mediaId).build()
         player.setMediaItem(mediaItem)
         player.prepare()
@@ -98,7 +98,13 @@ class QuranPlaybackService : MediaSessionService() {
 
     fun pause() = player.pause()
 
-    fun resume() = player.play()
+    fun resume() {
+        if (player.currentMediaItem == null) {
+            playAyah(currentSurah, currentAyah)
+        } else {
+            player.play()
+        }
+    }
 
     fun nextAyah() {
         val next = currentAyah + 1

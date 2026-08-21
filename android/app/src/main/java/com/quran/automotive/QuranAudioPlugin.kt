@@ -1,6 +1,8 @@
 package com.quran.automotive
 
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import androidx.core.content.ContextCompat
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -10,9 +12,10 @@ import com.getcapacitor.JSObject
 
 @CapacitorPlugin(name = "QuranAudio")
 class QuranAudioPlugin : Plugin() {
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     @PluginMethod
     fun initialize(call: PluginCall) {
-        ContextCompat.startForegroundService(context, Intent(context, QuranPlaybackService::class.java))
         QuranPlaybackService.setPendingListener { state ->
             val event = JSObject()
             event.put("surah", state.surah)
@@ -23,69 +26,100 @@ class QuranAudioPlugin : Plugin() {
             notifyListeners("playbackStateChanged", event)
             notifyListeners("ayahChanged", event)
         }
-        call.resolve()
+        ContextCompat.startForegroundService(context, Intent(context, QuranPlaybackService::class.java))
+        waitForService(call)
     }
 
     @PluginMethod
     fun playAyah(call: PluginCall) {
-        val service = requireService(call) ?: return
         val surah = call.getInt("surah")
         val ayah = call.getInt("ayah")
         if (surah == null || ayah == null) {
             call.reject("surah and ayah are required")
             return
         }
-        service.playAyah(surah, ayah)
-        call.resolve()
+        withService(call) { it.playAyah(surah, ayah) }
     }
 
     @PluginMethod
     fun pause(call: PluginCall) {
-        requireService(call)?.pause()
-        call.resolve()
+        withService(call) { it.pause() }
     }
 
     @PluginMethod
     fun resume(call: PluginCall) {
-        requireService(call)?.resume()
-        call.resolve()
+        withService(call) { it.resume() }
     }
 
     @PluginMethod
     fun nextAyah(call: PluginCall) {
-        requireService(call)?.nextAyah()
-        call.resolve()
+        withService(call) { it.nextAyah() }
     }
 
     @PluginMethod
     fun previousAyah(call: PluginCall) {
-        requireService(call)?.previousAyah()
-        call.resolve()
+        withService(call) { it.previousAyah() }
     }
 
     @PluginMethod
     fun seekTo(call: PluginCall) {
-        val service = requireService(call) ?: return
-        service.seekTo(call.getLong("positionMs") ?: 0L)
-        call.resolve()
+        val positionMs = call.getLong("positionMs") ?: 0L
+        withService(call) { it.seekTo(positionMs) }
     }
 
     @PluginMethod
     fun getState(call: PluginCall) {
-        val service = requireService(call) ?: return
-        val state = service.state()
-        call.resolve(JSObject().apply {
-            put("playing", state.playing)
-            put("surah", state.surah)
-            put("ayah", state.ayah)
-            put("positionMs", state.positionMs)
-            put("durationMs", state.durationMs)
-        })
+        mainHandler.post {
+            val service = requireService(call) ?: return@post
+            try {
+                val state = service.state()
+                call.resolve(JSObject().apply {
+                    put("playing", state.playing)
+                    put("surah", state.surah)
+                    put("ayah", state.ayah)
+                    put("positionMs", state.positionMs)
+                    put("durationMs", state.durationMs)
+                })
+            } catch (error: Exception) {
+                call.reject("Unable to read Quran playback state", error)
+            }
+        }
     }
 
     private fun requireService(call: PluginCall): QuranPlaybackService? {
         val service = QuranPlaybackService.instance
         if (service == null) call.reject("Quran audio is not initialized")
         return service
+    }
+
+    private fun withService(call: PluginCall, action: (QuranPlaybackService) -> Unit) {
+        mainHandler.post {
+            val service = requireService(call) ?: return@post
+            try {
+                action(service)
+                call.resolve()
+            } catch (error: Exception) {
+                call.reject("Quran audio operation failed", error)
+            }
+        }
+    }
+
+    private fun waitForService(call: PluginCall) {
+        val handler = Handler(Looper.getMainLooper())
+        var attempts = 0
+        val check = object : Runnable {
+            override fun run() {
+                if (QuranPlaybackService.instance != null) {
+                    call.resolve()
+                    return
+                }
+                if (attempts++ >= 40) {
+                    call.reject("Quran audio service failed to start")
+                    return
+                }
+                handler.postDelayed(this, 50)
+            }
+        }
+        handler.post(check)
     }
 }
