@@ -3,7 +3,6 @@ package com.quran.automotive
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import androidx.core.content.ContextCompat
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
@@ -26,7 +25,7 @@ class QuranAudioPlugin : Plugin() {
             notifyListeners("playbackStateChanged", event)
             notifyListeners("ayahChanged", event)
         }
-        ContextCompat.startForegroundService(context, Intent(context, QuranPlaybackService::class.java))
+        context.startService(Intent(context, QuranPlaybackService::class.java))
         waitForService(call)
     }
 
