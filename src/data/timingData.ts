@@ -1,8 +1,4 @@
-export const badrTimingData = {
-  reciter: 'Badr Al-Turki',
-  status: 'local-metadata-ready-for-supply',
-  surahs: [],
-} as const;
+export { badrAlTurkiTimings } from './badrAlTurkiTimings';
 
 export const resolveAudioUrl = (surahNumber: number) => {
   const padded = String(surahNumber).padStart(3, '0');

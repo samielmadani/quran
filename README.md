@@ -18,6 +18,16 @@ The application expects them to be named deterministically as:
 
 PUT THE 114 BADR AL-TURKI MP3 FILES HERE
 
+## Ayah timing metadata
+
+The local ayah timings are generated from the Badr Al-Turki protobuf timing dataset:
+
+```bash
+npm run timings:prepare
+```
+
+This downloads the 114 source files into `data/badr-al-turki/`, generates the bundled `src/data/badrAlTurkiTimings.ts`, and validates ayah counts and timestamp ranges. Runtime playback reads only the generated local file and bundled MP3s; it does not make timing-data network requests.
+
 ## Offline-first architecture
 
 - Quran text is bundled locally in the app.

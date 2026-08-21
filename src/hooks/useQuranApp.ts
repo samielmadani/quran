@@ -21,19 +21,29 @@ export function useQuranApp() {
     setCurrentSurah(state.surah);
     setCurrentAyah(state.ayah);
     setIsPlaying(state.playing);
+    return audioService.subscribe((nextState) => {
+      setCurrentSurah(nextState.surah);
+      setCurrentAyah(nextState.ayah);
+      setIsPlaying(nextState.playing);
+    });
   }, []);
 
   useEffect(() => {
-    if (!autoScroll || !viewRef.current) {
+    const reading = viewRef.current;
+    if (!autoScroll || !reading) {
       return;
     }
 
-    const target = document.getElementById(`ayah-${currentSurah}-${currentAyah}`);
+    const target = reading.querySelector<HTMLElement>(`#ayah-${currentSurah}-${currentAyah}`);
     if (!target) {
       return;
     }
 
-    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const targetTop = target.offsetTop - (reading.clientHeight - target.offsetHeight) / 2;
+    reading.scrollTo({
+      top: Math.max(0, targetTop),
+      behavior: 'smooth',
+    });
   }, [currentSurah, currentAyah, autoScroll]);
 
   const handleSelectAyah = (surahNumber: number, ayahNumber: number) => {

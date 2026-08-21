@@ -1,6 +1,4 @@
 export type AyahTiming = {
-  surah: number;
-  ayah: number;
   startMs: number;
   endMs: number;
 };

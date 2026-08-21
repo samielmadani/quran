@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
-import type { AudioPlaybackRequest, AyahTiming, PlaybackState } from '../types/audio';
+import { badrAlTurkiTimings, resolveAudioUrl } from '../data/timingData';
+import type { AudioPlaybackRequest, PlaybackState } from '../types/audio';
 
 const DEFAULT_SURAH = 1;
 const DEFAULT_AYAH = 1;
@@ -11,6 +12,28 @@ export class AudioService {
   private playing = false;
   private currentPositionMs = 0;
   private durationMs = 0;
+  private readonly audio = typeof Audio === 'undefined' ? null : new Audio();
+  private readonly listeners = new Set<(state: PlaybackState) => void>();
+
+  constructor() {
+    this.audio?.addEventListener('timeupdate', () => {
+      this.currentPositionMs = this.audio ? this.audio.currentTime * 1000 : 0;
+      const ayah = this.findAyahAt(this.currentPositionMs);
+      if (ayah !== undefined && ayah !== this.currentAyah) {
+        this.currentAyah = ayah;
+        this.notify();
+        void this.persistState();
+      }
+    });
+    this.audio?.addEventListener('loadedmetadata', () => {
+      this.durationMs = this.audio ? this.audio.duration * 1000 : 0;
+    });
+    this.audio?.addEventListener('ended', () => {
+      this.playing = false;
+      this.notify();
+      void this.persistState();
+    });
+  }
 
   async initialize() {
     const state = await this.restoreState();
@@ -24,17 +47,34 @@ export class AudioService {
   async playAyah(payload: AudioPlaybackRequest): Promise<void> {
     this.currentSurah = payload.surah;
     this.currentAyah = payload.ayah;
+    if (this.audio) {
+      this.audio.src = resolveAudioUrl(payload.surah);
+      const timing = badrAlTurkiTimings[payload.surah]?.[payload.ayah];
+      if (!timing) throw new Error(`Missing timing for ${payload.surah}:${payload.ayah}`);
+      this.audio.currentTime = timing.startMs / 1000;
+      await this.audio.play();
+    }
     this.playing = true;
+    this.notify();
     await this.persistState();
   }
 
   async pause() {
+    this.audio?.pause();
     this.playing = false;
+    this.notify();
     await this.persistState();
   }
 
   async resume() {
+    if (this.audio) {
+      if (!this.audio.src) {
+        this.audio.src = resolveAudioUrl(this.currentSurah);
+      }
+      await this.audio.play();
+    }
     this.playing = true;
+    this.notify();
     await this.persistState();
   }
 
@@ -50,6 +90,9 @@ export class AudioService {
 
   async seekTo(positionMs: number) {
     this.currentPositionMs = Math.max(0, positionMs);
+    if (this.audio) {
+      this.audio.currentTime = this.currentPositionMs / 1000;
+    }
     await this.persistState();
   }
 
@@ -63,8 +106,26 @@ export class AudioService {
     };
   }
 
-  async loadTimingData(): Promise<AyahTiming[]> {
-    return [];
+  subscribe(listener: (state: PlaybackState) => void) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private findAyahAt(currentMs: number) {
+    const timings = badrAlTurkiTimings[this.currentSurah];
+    if (!timings) return undefined;
+    const ayahs = Object.entries(timings).sort(([left], [right]) => Number(left) - Number(right));
+    for (const [ayahText, timing] of ayahs) {
+      if (timing.startMs <= currentMs && currentMs < timing.endMs) return Number(ayahText);
+    }
+    return undefined;
+  }
+
+  private notify() {
+    const state = this.getState();
+    for (const listener of this.listeners) listener(state);
   }
 
   private async persistState() {
