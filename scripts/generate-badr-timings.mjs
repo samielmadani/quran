@@ -76,7 +76,6 @@ function parseSurah(buffer, expectedSurah) {
   return timings;
 }
 
-const quran = JSON.parse(readFileSync(quranPath, 'utf8'));
 const allTimings = {};
 for (let surah = 1; surah <= 114; surah += 1) {
   const filename = `${String(surah).padStart(3, '0')}.pb`;

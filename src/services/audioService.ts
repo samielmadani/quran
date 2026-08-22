@@ -1,7 +1,8 @@
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { QuranAudio } from '../android/QuranAudioPlugin';
-import { badrAlTurkiTimings, resolveAudioUrl } from '../data/timingData';
+import { getReciterById, DEFAULT_RECITER_ID } from '../data/reciterRegistry';
+import { reciterStorage } from './storage';
 import type { AudioPlaybackRequest, PlaybackState } from '../types/audio';
 
 const DEFAULT_SURAH = 1;
@@ -10,11 +11,13 @@ const DEFAULT_AYAH = 1;
 export class AudioService {
   private currentSurah = DEFAULT_SURAH;
   private currentAyah = DEFAULT_AYAH;
+  private activeReciterId = DEFAULT_RECITER_ID;
   private playing = false;
   private currentPositionMs = 0;
   private durationMs = 0;
   private pendingSeekMs: number | null = null;
   private progressFrame: number | null = null;
+  private currentAudioKey: string | null = null;
   private readonly audio = typeof Audio === 'undefined' ? null : new Audio();
   private readonly listeners = new Set<(state: PlaybackState) => void>();
 
@@ -64,8 +67,11 @@ export class AudioService {
   }
 
   async initialize() {
+    this.activeReciterId = await reciterStorage.getActiveReciterId();
+
     if (Capacitor.isNativePlatform()) {
       await QuranAudio.initialize();
+      await QuranAudio.setActiveReciter({ reciterId: this.activeReciterId });
       const state = await QuranAudio.getState();
       this.applyNativeState(state);
       await QuranAudio.addListener('playbackStateChanged', (nextState) => {
@@ -87,6 +93,20 @@ export class AudioService {
     this.playing = state.playing;
   }
 
+  async setReciter(reciterId: string): Promise<void> {
+    this.activeReciterId = reciterId;
+    await reciterStorage.setActiveReciterId(reciterId);
+    if (Capacitor.isNativePlatform()) {
+      await QuranAudio.setActiveReciter({ reciterId });
+    } else {
+      this.currentAudioKey = null;
+    }
+  }
+
+  getReciterId(): string {
+    return this.activeReciterId;
+  }
+
   async playAyah(payload: AudioPlaybackRequest): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       await QuranAudio.playAyah(payload);
@@ -95,15 +115,17 @@ export class AudioService {
     this.currentSurah = payload.surah;
     this.currentAyah = payload.ayah;
     if (this.audio) {
-      const timing = badrAlTurkiTimings[payload.surah]?.[payload.ayah];
-      if (!timing) throw new Error(`Missing timing for ${payload.surah}:${payload.ayah}`);
-      this.loadSurahAudio(payload.surah);
+      const reciter = getReciterById(this.activeReciterId);
+      const timing = reciter.timings?.[payload.surah]?.[payload.ayah];
+      const startMs = timing?.startMs ?? 0;
+
+      await this.loadSurahAudio(payload.surah);
       this.currentSurah = payload.surah;
       this.currentAyah = payload.ayah;
-      this.pendingSeekMs = timing.startMs;
-      this.currentPositionMs = timing.startMs;
+      this.pendingSeekMs = startMs;
+      this.currentPositionMs = startMs;
       if (this.audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
-        this.audio.currentTime = timing.startMs / 1000;
+        this.audio.currentTime = startMs / 1000;
       }
       await this.audio.play();
     }
@@ -130,8 +152,8 @@ export class AudioService {
       return;
     }
     if (this.audio) {
-      if (!this.audio.src) {
-        this.audio.src = resolveAudioUrl(this.currentSurah);
+      if (!this.audio.src || this.currentAudioKey !== `${this.activeReciterId}_${this.currentSurah}`) {
+        await this.loadSurahAudio(this.currentSurah);
       }
       await this.audio.play();
     }
@@ -188,7 +210,8 @@ export class AudioService {
   }
 
   private findAyahAt(currentMs: number) {
-    const timings = badrAlTurkiTimings[this.currentSurah];
+    const reciter = getReciterById(this.activeReciterId);
+    const timings = reciter.timings?.[this.currentSurah];
     if (!timings) return undefined;
     const ayahs = Object.entries(timings).sort(([left], [right]) => Number(left) - Number(right));
     for (const [ayahText, timing] of ayahs) {
@@ -197,14 +220,21 @@ export class AudioService {
     return undefined;
   }
 
-  private loadSurahAudio(surah: number) {
+  private async loadSurahAudio(surah: number) {
     if (!this.audio) return;
-    const source = new URL(resolveAudioUrl(surah), window.location.href).href;
-    if (this.audio.src === source && this.audio.readyState >= 1) return;
+    const key = `${this.activeReciterId}_${surah}`;
+    if (this.currentAudioKey === key && this.audio.src && this.audio.readyState >= 1) return;
+
+    let source = await reciterStorage.getAudioUrl(this.activeReciterId, surah);
+    if (!source) {
+      const reciter = getReciterById(this.activeReciterId);
+      source = reciter.audioUrlPattern(surah);
+    }
 
     this.audio.pause();
     this.pendingSeekMs = null;
     this.audio.src = source;
+    this.currentAudioKey = key;
     this.audio.load();
   }
 

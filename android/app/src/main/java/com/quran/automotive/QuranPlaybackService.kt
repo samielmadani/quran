@@ -1,6 +1,6 @@
 package com.quran.automotive
 
-import android.os.Bundle
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import androidx.media3.common.MediaItem
@@ -9,6 +9,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import org.json.JSONObject
+import java.io.File
 import java.util.Locale
 
 data class NativePlaybackState(
@@ -39,6 +40,7 @@ class QuranPlaybackService : MediaSessionService() {
     private var currentAyah = 1
     private var pendingSeekMs: Long? = null
     private var eventListener: ((NativePlaybackState) -> Unit)? = null
+    var activeReciterId: String = "badr-al-turki"
 
     override fun onCreate() {
         super.onCreate()
@@ -75,25 +77,63 @@ class QuranPlaybackService : MediaSessionService() {
     }
 
     fun playAyah(surah: Int, ayah: Int) {
-        val range = timingData[surah]?.get(ayah) ?: return
+        val range = timingData[surah]?.get(ayah)
         currentSurah = surah
         currentAyah = ayah
-        pendingSeekMs = range.startMs
-        val mediaId = surah.toString()
+        val startMs = range?.startMs ?: 0L
+        pendingSeekMs = startMs
+        val mediaId = "${activeReciterId}_$surah"
+
         if (player.currentMediaItem?.mediaId == mediaId) {
-            player.seekTo(range.startMs)
+            player.seekTo(startMs)
             player.play()
             emitState()
             return
         }
 
-        val audioPath = String.format(Locale.US, "asset:///public/assets/audio/badr-al-turki/%03d.mp3", surah)
-        val mediaItem = MediaItem.Builder().setUri(audioPath).setMediaId(mediaId).build()
+        val mediaItem = resolveMediaItem(surah, mediaId)
+        if (mediaItem == null) {
+            emitState()
+            return
+        }
+
         player.setMediaItem(mediaItem)
         player.prepare()
-        player.seekTo(range.startMs)
+        player.seekTo(startMs)
         player.play()
         emitState()
+    }
+
+    private fun resolveMediaItem(surah: Int, mediaId: String): MediaItem? {
+        val padded = String.format(Locale.US, "%03d.mp3", surah)
+        
+        // Check internal filesDir
+        val internalFile = File(filesDir, "reciters/$activeReciterId/$padded")
+        if (internalFile.exists() && internalFile.length() > 0) {
+            return MediaItem.Builder()
+                .setUri(Uri.fromFile(internalFile))
+                .setMediaId(mediaId)
+                .build()
+        }
+
+        // Check external files dir
+        val externalDir = getExternalFilesDir(null)
+        if (externalDir != null) {
+            val externalFile = File(externalDir, "reciters/$activeReciterId/$padded")
+            if (externalFile.exists() && externalFile.length() > 0) {
+                return MediaItem.Builder()
+                    .setUri(Uri.fromFile(externalFile))
+                    .setMediaId(mediaId)
+                    .build()
+            }
+        }
+
+        // Check assets fallback
+        val assetPath = String.format(Locale.US, "asset:///public/assets/audio/%s/%03d.mp3", activeReciterId, surah)
+        return MediaItem.Builder()
+            .setUri(assetPath)
+            .setMediaId(mediaId)
+            .build()
     }
 
     fun pause() = player.pause()
@@ -108,17 +148,39 @@ class QuranPlaybackService : MediaSessionService() {
 
     fun nextAyah() {
         val next = currentAyah + 1
-        if (timingData[currentSurah]?.containsKey(next) == true) playAyah(currentSurah, next)
+        if (timingData[currentSurah]?.containsKey(next) == true) {
+            playAyah(currentSurah, next)
+        }
     }
 
     fun previousAyah() {
         val previous = (currentAyah - 1).coerceAtLeast(1)
-        if (timingData[currentSurah]?.containsKey(previous) == true) playAyah(currentSurah, previous)
+        if (timingData[currentSurah]?.containsKey(previous) == true) {
+            playAyah(currentSurah, previous)
+        }
     }
 
     fun seekTo(positionMs: Long) {
         player.seekTo(positionMs.coerceAtLeast(0))
         emitState()
+    }
+
+    fun setTimingJson(json: String) {
+        try {
+            timingData.clear()
+            val surahs = JSONObject(json)
+            for (surahKey in surahs.keys()) {
+                val ayahs = surahs.getJSONObject(surahKey)
+                val ranges = mutableMapOf<Int, AyahRange>()
+                for (ayahKey in ayahs.keys()) {
+                    val range = ayahs.getJSONObject(ayahKey)
+                    ranges[ayahKey.toInt()] = AyahRange(range.getLong("startMs"), range.getLong("endMs"))
+                }
+                timingData[surahKey.toInt()] = ranges
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun state() = NativePlaybackState(
@@ -159,16 +221,11 @@ class QuranPlaybackService : MediaSessionService() {
     }
 
     private fun loadTimingData() {
-        val json = assets.open("public/data/badrAlTurkiTimings.json").use { it.readBytes().toString(Charsets.UTF_8) }
-        val surahs = JSONObject(json)
-        for (surahKey in surahs.keys()) {
-            val ayahs = surahs.getJSONObject(surahKey)
-            val ranges = mutableMapOf<Int, AyahRange>()
-            for (ayahKey in ayahs.keys()) {
-                val range = ayahs.getJSONObject(ayahKey)
-                ranges[ayahKey.toInt()] = AyahRange(range.getLong("startMs"), range.getLong("endMs"))
-            }
-            timingData[surahKey.toInt()] = ranges
+        try {
+            val json = assets.open("public/data/badrAlTurkiTimings.json").use { it.readBytes().toString(Charsets.UTF_8) }
+            setTimingJson(json)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

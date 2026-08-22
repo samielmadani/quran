@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { quranService } from '../services/quranService';
 import { audioService } from '../services/audioService';
+import { reciterStorage } from '../services/storage';
+import { DEFAULT_RECITER_ID, getReciterById } from '../data/reciterRegistry';
 
 const DEFAULT_SURAH = 1;
 const DEFAULT_AYAH = 1;
@@ -14,9 +16,13 @@ export function useQuranApp() {
   const [textSize, setTextSize] = useState(2.8);
   const [autoScroll, setAutoScroll] = useState(true);
   const [surahListOpen, setSurahListOpen] = useState(false);
+  const [reciterModalOpen, setReciterModalOpen] = useState(false);
+  const [isFirstStartup, setIsFirstStartup] = useState(false);
+  const [activeReciterId, setActiveReciterId] = useState(DEFAULT_RECITER_ID);
   const viewRef = useRef<HTMLDivElement | null>(null);
 
   const surahs = useMemo(() => quranService.getSurahs(), []);
+  const activeReciter = useMemo(() => getReciterById(activeReciterId), [activeReciterId]);
 
   useEffect(() => {
     const unsubscribe = audioService.subscribe((nextState) => {
@@ -26,13 +32,22 @@ export function useQuranApp() {
       setPositionMs(nextState.positionMs);
       setDurationMs(nextState.durationMs);
     });
-    void audioService.initialize();
-    const state = audioService.getState();
-    setCurrentSurah(state.surah);
-    setCurrentAyah(state.ayah);
-    setIsPlaying(state.playing);
-    setPositionMs(state.positionMs);
-    setDurationMs(state.durationMs);
+
+    const init = async () => {
+      await audioService.initialize();
+      const currentReciter = await reciterStorage.getActiveReciterId();
+      setActiveReciterId(currentReciter);
+
+      // Check first startup / installed status
+      const downloaded = await reciterStorage.getDownloadedSurahs(currentReciter);
+      if (downloaded.length === 0) {
+        setIsFirstStartup(true);
+        setReciterModalOpen(true);
+      }
+    };
+
+    void init();
+
     return unsubscribe;
   }, []);
 
@@ -115,6 +130,12 @@ export function useQuranApp() {
     }
   };
 
+  const handleSelectReciter = async (reciterId: string) => {
+    setActiveReciterId(reciterId);
+    await audioService.setReciter(reciterId);
+    setIsFirstStartup(false);
+  };
+
   return {
     surahs,
     currentSurah,
@@ -125,15 +146,21 @@ export function useQuranApp() {
     textSize,
     autoScroll,
     surahListOpen,
+    reciterModalOpen,
+    isFirstStartup,
+    activeReciter,
+    activeReciterId,
     viewRef,
     setTextSize,
     setAutoScroll,
     setSurahListOpen,
+    setReciterModalOpen,
     setCurrentSurah,
     setCurrentAyah,
     handleSelectAyah,
     handlePlayPause,
     handleNextAyah,
     handlePreviousAyah,
+    handleSelectReciter,
   };
 }

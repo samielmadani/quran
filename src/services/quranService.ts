@@ -1,4 +1,5 @@
 import { getAyahReference, quranDataset } from '../data/quranData';
+import { getReciterById, DEFAULT_RECITER_ID } from '../data/reciterRegistry';
 
 export const quranService = {
   getSurahs: () => quranDataset.surahs,
@@ -7,5 +8,8 @@ export const quranService = {
     const ayahRef = getAyahReference(surahNumber, ayahNumber);
     return ayahRef.ayah?.text ?? '';
   },
-  getAudioFileName: (surahNumber: number) => `assets/audio/badr-al-turki/${String(surahNumber).padStart(3, '0')}.mp3`,
+  getAudioFileName: (surahNumber: number, reciterId: string = DEFAULT_RECITER_ID) => {
+    const reciter = getReciterById(reciterId);
+    return reciter.audioUrlPattern(surahNumber);
+  },
 };
