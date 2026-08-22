@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Preferences } from '@capacitor/preferences';
 import { quranService } from '../services/quranService';
 import { audioService } from '../services/audioService';
@@ -6,19 +6,19 @@ import { reciterStorage } from '../services/storage';
 import { reciterDownloadManager, type DownloadProgress } from '../services/reciterDownloadManager';
 import { DEFAULT_RECITER_ID, getReciterById } from '../data/reciterRegistry';
 import { translations, type AppLanguage } from '../data/translations';
-import type { RepeatMode, SleepTimerMode, RecentItem } from '../types/audio';
+import type { PlaybackState, RecentItem, RepeatMode, SleepTimerMode } from '../types/audio';
 
 const DEFAULT_SURAH = 1;
 const DEFAULT_AYAH = 1;
 const UI_SETTINGS_STORAGE_KEY = 'quran_ui_settings';
 
 export const FONT_SIZE_PRESETS = [
-  { id: 'small', labelKey: 'fontSmall', size: 2.0 },
-  { id: 'medium', labelKey: 'fontMedium', size: 2.5 },
-  { id: 'large', labelKey: 'fontLarge', size: 3.0 },
-  { id: 'xlarge', labelKey: 'fontExtraLarge', size: 3.6 },
-  { id: 'huge', labelKey: 'fontHuge', size: 4.2 },
-] as const;
+  { id: 'small', labelKey: 'fontSmall', size: 2.2 },
+  { id: 'medium', labelKey: 'fontMedium', size: 2.8 },
+  { id: 'large', labelKey: 'fontLarge', size: 3.4 },
+  { id: 'xlarge', labelKey: 'fontExtraLarge', size: 4.0 },
+  { id: 'huge', labelKey: 'fontHuge', size: 4.5 },
+];
 
 interface StoredUiSettings {
   language?: AppLanguage;
@@ -59,12 +59,12 @@ export function useQuranApp() {
   const [isFirstStartup, setIsFirstStartup] = useState(false);
   const [activeReciterId, setActiveReciterId] = useState(DEFAULT_RECITER_ID);
 
-  // Settings & Customization
-  const [showPrevNext, setShowPrevNext] = useState(() => (typeof initialSettings.showPrevNext === 'boolean' ? initialSettings.showPrevNext : false));
+  // Settings & Customization: Previous/Next, Recents, and Bookmarks default to TRUE on fresh install
+  const [showPrevNext, setShowPrevNext] = useState(() => (typeof initialSettings.showPrevNext === 'boolean' ? initialSettings.showPrevNext : true));
   const [swapPrevNext, setSwapPrevNext] = useState(() => (typeof initialSettings.swapPrevNext === 'boolean' ? initialSettings.swapPrevNext : false));
-  const [showRecentlyPlayed, setShowRecentlyPlayed] = useState(() => (typeof initialSettings.showRecentlyPlayed === 'boolean' ? initialSettings.showRecentlyPlayed : false));
-  const [enableBookmarks, setEnableBookmarks] = useState(() => (typeof initialSettings.enableBookmarks === 'boolean' ? initialSettings.enableBookmarks : false));
-  const [bookmarkedSurahs, setBookmarkedSurahs] = useState<number[]>(() => (Array.isArray(initialSettings.bookmarkedSurahs) ? initialSettings.bookmarkedSurahs : []));
+  const [showRecentlyPlayed, setShowRecentlyPlayed] = useState(() => (typeof initialSettings.showRecentlyPlayed === 'boolean' ? initialSettings.showRecentlyPlayed : true));
+  const [enableBookmarks, setEnableBookmarks] = useState(() => (typeof initialSettings.enableBookmarks === 'boolean' ? initialSettings.enableBookmarks : true));
+  const [bookmarkedSurahs, setBookmarkedSurahs] = useState<number[]>(() => (Array.isArray(initialSettings.bookmarkedSurahs) ? initialSettings.bookmarkedSurahs : [1, 18, 36, 55, 67, 112]));
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('continuous');
   const [sleepTimerMode, setSleepTimerMode] = useState<SleepTimerMode>('off');
   const [sleepTimerRemainingSec, setSleepTimerRemainingSec] = useState<number | null>(null);
@@ -100,20 +100,22 @@ export function useQuranApp() {
         bookmarkedSurahs,
         ...updates,
       };
-      const json = JSON.stringify(current);
-      localStorage.setItem(UI_SETTINGS_STORAGE_KEY, json);
-      void Preferences.set({ key: UI_SETTINGS_STORAGE_KEY, value: json });
+      localStorage.setItem(UI_SETTINGS_STORAGE_KEY, JSON.stringify(current));
+      void Preferences.set({
+        key: UI_SETTINGS_STORAGE_KEY,
+        value: JSON.stringify(current),
+      });
     } catch {
       // Ignore
     }
   }, [language, pinned, showPrevNext, swapPrevNext, textSize, autoScroll, showRecentlyPlayed, enableBookmarks, bookmarkedSurahs]);
 
-  // Subscribe to audioService
+  // Subscribe to audio player changes
   useEffect(() => {
-    const unsubscribe = audioService.subscribe((nextState) => {
+    const unsubscribe = audioService.subscribe((nextState: PlaybackState) => {
+      setIsPlaying(nextState.playing);
       setCurrentSurah(nextState.surah);
       setCurrentAyah(nextState.ayah);
-      setIsPlaying(nextState.playing);
       setPositionMs(nextState.positionMs);
       setDurationMs(nextState.durationMs);
       if (nextState.repeatMode) setRepeatMode(nextState.repeatMode);
@@ -153,14 +155,24 @@ export function useQuranApp() {
         setLastSession(session);
         setCurrentSurah(session.surah);
         setCurrentAyah(session.ayah);
-        setShowContinueCard(true);
+        setPositionMs(session.positionMs);
+        if (session.reciterId) {
+          setActiveReciterId(session.reciterId);
+        }
+        if (session.positionMs > 2000 || session.ayah > 1 || session.surah > 1) {
+          setShowContinueCard(true);
+        }
       }
 
       // Check first startup status
-      const downloaded = await reciterStorage.getDownloadedSurahs(currentReciter);
-      if (downloaded.length === 0) {
-        setIsFirstStartup(true);
-        setReciterModalOpen(true);
+      const hasLaunched = localStorage.getItem('quran_has_launched_before');
+      if (!hasLaunched) {
+        localStorage.setItem('quran_has_launched_before', 'true');
+        const downloaded = await reciterStorage.getDownloadedSurahs(currentReciter);
+        if (downloaded.length === 0) {
+          setIsFirstStartup(true);
+          setReciterModalOpen(true);
+        }
       }
     };
 
@@ -203,19 +215,16 @@ export function useQuranApp() {
     setCurrentAyah(ayahNumber);
     setShowContinueCard(false);
     void audioService.playAyah({ surah: surahNumber, ayah: ayahNumber });
-    setIsPlaying(true);
   };
 
   const handlePlayPause = async () => {
     setShowContinueCard(false);
     if (isPlaying) {
       await audioService.pause();
-      setIsPlaying(false);
       return;
     }
 
     await audioService.resume();
-    setIsPlaying(true);
   };
 
   const handleNextAyah = async () => {

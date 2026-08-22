@@ -32,6 +32,10 @@ export class AudioService {
   private readonly audio = typeof Audio === 'undefined' ? null : new Audio();
   private readonly listeners = new Set<(state: PlaybackState) => void>();
 
+  // Async token guards to prevent race conditions during rapid switching
+  private reciterSwitchRequestId = 0;
+  private playbackRequestId = 0;
+
   // Autoplay / Repeat Mode
   private repeatMode: RepeatMode = 'continuous';
 
@@ -198,35 +202,67 @@ export class AudioService {
   }
 
   // =========================================================================
-  // Reciter Switching
+  // Reciter Switching (Safe Lifecycle & Race-Free)
   // =========================================================================
   async setReciter(reciterId: string): Promise<void> {
     if (this.activeReciterId === reciterId && this.currentAudioKey?.startsWith(reciterId)) {
       return;
     }
 
+    const requestId = ++this.reciterSwitchRequestId;
     const wasPlaying = this.playing;
-    this.activeReciterId = reciterId;
-    await reciterStorage.setActiveReciterId(reciterId);
+
+    // 1. Immediately halt and reset current audio playback
+    if (this.audio) {
+      try {
+        this.audio.pause();
+        this.audio.currentTime = 0;
+        this.audio.removeAttribute('src');
+        this.audio.load();
+      } catch {
+        // Ignore
+      }
+    }
+    this.stopProgressLoop();
+    this.playing = false;
+    this.currentAudioKey = null;
 
     if (Capacitor.isNativePlatform()) {
       try {
+        await QuranAudio.pause();
         await QuranAudio.setActiveReciter({ reciterId });
       } catch {
         // Ignore native error
       }
     }
 
-    this.currentAudioKey = null;
+    this.activeReciterId = reciterId;
+    await reciterStorage.setActiveReciterId(reciterId);
+
+    // If another switch occurred concurrently, abort
+    if (requestId !== this.reciterSwitchRequestId) {
+      return;
+    }
 
     if (this.audio) {
       const surah = this.currentSurah;
       const ayah = this.currentAyah;
       const reciter = getReciterById(reciterId);
       const timing = reciter.timings?.[surah]?.[ayah];
-      const startMs = timing?.startMs ?? 0;
+      let startMs = 0;
+      if (timing) {
+        startMs = timing.startMs;
+      } else if (ayah === 0) {
+        startMs = 0;
+      } else if (ayah === 1 && reciter.timings?.[surah]?.[1]) {
+        startMs = reciter.timings[surah][1].startMs;
+      }
 
       await this.loadSurahAudio(surah);
+      if (requestId !== this.reciterSwitchRequestId) {
+        return;
+      }
+
       this.pendingSeekMs = startMs;
       this.currentPositionMs = startMs;
 
@@ -238,7 +274,9 @@ export class AudioService {
         try {
           await this.audio.play();
           this.playing = true;
-        } catch {
+          this.startProgressLoop();
+        } catch (err) {
+          console.warn('Audio play after reciter change interrupted', err);
           this.playing = false;
         }
       }
@@ -257,6 +295,8 @@ export class AudioService {
   // Playback Controls
   // =========================================================================
   async playAyah(payload: AudioPlaybackRequest): Promise<void> {
+    const requestId = ++this.playbackRequestId;
+
     if (Capacitor.isNativePlatform()) {
       try {
         await QuranAudio.playAyah(payload);
@@ -279,9 +319,23 @@ export class AudioService {
     if (this.audio) {
       const reciter = getReciterById(this.activeReciterId);
       const timing = reciter.timings?.[payload.surah]?.[payload.ayah];
-      const startMs = payload.positionMs !== undefined ? payload.positionMs : (timing?.startMs ?? 0);
+      let startMs = 0;
+
+      if (payload.positionMs !== undefined) {
+        startMs = payload.positionMs;
+      } else if (timing) {
+        startMs = timing.startMs;
+      } else if (payload.ayah === 0) {
+        startMs = 0;
+      } else if (payload.ayah === 1 && reciter.timings?.[payload.surah]?.[1]) {
+        startMs = reciter.timings[payload.surah][1].startMs;
+      }
 
       await this.loadSurahAudio(payload.surah);
+      if (requestId !== this.playbackRequestId) {
+        return;
+      }
+
       this.currentSurah = payload.surah;
       this.currentAyah = payload.ayah;
       this.pendingSeekMs = startMs;
@@ -294,6 +348,7 @@ export class AudioService {
       try {
         await this.audio.play();
         this.playing = true;
+        this.startProgressLoop();
       } catch (e) {
         console.warn('Audio play request interrupted or requires user gesture', e);
         this.playing = false;
@@ -318,30 +373,34 @@ export class AudioService {
         positionMs: session.positionMs,
       });
     } else {
-      await this.resume();
+      await this.playAyah({ surah: this.currentSurah, ayah: this.currentAyah });
     }
   }
 
-  async pause() {
+  async pause(): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       try {
         await QuranAudio.pause();
+        this.playing = false;
+        this.updateMediaSession();
+        this.notify();
+        await this.persistState();
+        return;
       } catch {
-        // Ignore
+        // Fallback
       }
     }
-    this.audio?.pause();
-    this.stopProgressLoop();
-    this.playing = false;
     if (this.audio) {
-      this.currentPositionMs = this.audio.currentTime * 1000;
+      this.audio.pause();
     }
+    this.playing = false;
+    this.stopProgressLoop();
     this.updateMediaSession();
     this.notify();
     await this.persistState();
   }
 
-  async resume() {
+  async resume(): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       try {
         await QuranAudio.resume();
@@ -371,6 +430,7 @@ export class AudioService {
       try {
         await this.audio.play();
         this.playing = true;
+        this.startProgressLoop();
       } catch (err) {
         console.warn('Resume play interrupted', err);
         this.playing = false;
@@ -451,10 +511,9 @@ export class AudioService {
       repeat_surah: 'off',
       off: 'continuous',
     };
-    this.repeatMode = cycleMap[this.repeatMode] || 'continuous';
-    this.notify();
-    void this.saveSettings();
-    return this.repeatMode;
+    const nextMode = cycleMap[this.repeatMode] || 'continuous';
+    this.setRepeatMode(nextMode);
+    return nextMode;
   }
 
   setRepeatMode(mode: RepeatMode) {
@@ -468,27 +527,28 @@ export class AudioService {
   }
 
   // =========================================================================
-  // Sleep Timer
+  // Sleep / Stop Timer Management
   // =========================================================================
   setSleepTimer(mode: SleepTimerMode) {
     this.sleepTimerMode = mode;
+
     if (this.sleepTimerInterval !== null) {
       window.clearInterval(this.sleepTimerInterval);
       this.sleepTimerInterval = null;
     }
 
-    if (mode === 'off' || mode === 'end_of_surah' || mode === 'end_of_ayah') {
+    if (mode === 'off' || mode === 'end_of_ayah' || mode === 'end_of_surah') {
       this.sleepTimerRemainingSec = null;
       this.notify();
       return;
     }
 
-    let totalSeconds = 0;
-    if (mode === '5min') totalSeconds = 5 * 60;
-    else if (mode === '15min') totalSeconds = 15 * 60;
-    else if (mode === '30min') totalSeconds = 30 * 60;
+    let durationSeconds = 0;
+    if (mode === '5min') durationSeconds = 5 * 60;
+    else if (mode === '15min') durationSeconds = 15 * 60;
+    else if (mode === '30min') durationSeconds = 30 * 60;
 
-    this.sleepTimerRemainingSec = totalSeconds;
+    this.sleepTimerRemainingSec = durationSeconds;
     this.notify();
 
     this.sleepTimerInterval = window.setInterval(() => {
@@ -718,10 +778,29 @@ export class AudioService {
     const reciter = getReciterById(this.activeReciterId);
     const timings = reciter.timings?.[this.currentSurah];
     if (!timings) return undefined;
-    const ayahs = Object.entries(timings).sort(([left], [right]) => Number(left) - Number(right));
-    for (const [ayahText, timing] of ayahs) {
-      if (timing.startMs <= currentMs && currentMs < timing.endMs) return Number(ayahText);
+
+    const entries = Object.entries(timings)
+      .map(([k, v]) => ({ ayah: Number(k), timing: v }))
+      .sort((a, b) => a.ayah - b.ayah);
+
+    if (entries.length === 0) return undefined;
+
+    for (const entry of entries) {
+      if (currentMs >= entry.timing.startMs && currentMs < entry.timing.endMs) {
+        return entry.ayah;
+      }
     }
+
+    // If past last timing start
+    if (currentMs >= entries[entries.length - 1].timing.startMs) {
+      return entries[entries.length - 1].ayah;
+    }
+
+    // If before first timing start (e.g. Bismillah before ayah 1)
+    if (currentMs < entries[0].timing.startMs) {
+      return this.currentSurah === 1 ? 1 : 0;
+    }
+
     return undefined;
   }
 
@@ -802,21 +881,14 @@ export class AudioService {
     });
 
     if (Capacitor.isNativePlatform()) {
-      try {
-        void CapApp.addListener('appStateChange', (state) => {
-          if (!state.isActive) {
-            void this.persistState();
-          }
-        });
-      } catch {
-        // Ignore
-      }
+      void CapApp.addListener('appStateChange', (state) => {
+        if (!state.isActive) {
+          void this.persistState();
+        }
+      });
     }
   }
 
-  // =========================================================================
-  // MediaSession API (Lockscreen, Notification widget, Car steering wheel)
-  // =========================================================================
   private setupMediaSessionHandlers() {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
 
@@ -834,42 +906,32 @@ export class AudioService {
         void this.nextAyah();
       });
       navigator.mediaSession.setActionHandler('seekto', (details) => {
-        if (details.seekTime !== undefined) {
+        if (details.seekTime !== undefined && details.seekTime !== null) {
           void this.seekTo(details.seekTime * 1000);
         }
       });
-      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-        const offset = (details.seekOffset || 5) * 1000;
-        void this.seekTo(Math.max(0, this.currentPositionMs - offset));
-      });
-      navigator.mediaSession.setActionHandler('seekforward', (details) => {
-        const offset = (details.seekOffset || 5) * 1000;
-        void this.seekTo(this.currentPositionMs + offset);
-      });
-      navigator.mediaSession.setActionHandler('stop', () => {
-        void this.pause();
-      });
-    } catch {
-      // Some browsers may not support all action handlers
+    } catch (e) {
+      console.warn('Failed to set up MediaSession handlers', e);
     }
   }
 
   private updateMediaSession() {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
 
-    const surah = quranService.getSurah(this.currentSurah);
-    const reciter = getReciterById(this.activeReciterId);
-
     try {
+      const surahData = quranService.getSurah(this.currentSurah);
+      const reciter = getReciterById(this.activeReciterId);
+
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: `Surah ${surah.nameTransliteration} (${surah.nameArabic}) — Ayah ${this.currentAyah}`,
-        artist: `${reciter.name} (${reciter.style})`,
-        album: 'The Holy Quran — القرآن الكريم',
+        title: `${surahData.nameTransliteration} (${surahData.nameArabic}) — Ayah ${this.currentAyah}`,
+        artist: `${reciter.name} (${reciter.nameArabic})`,
+        album: 'The Holy Quran - القرآن الكريم',
         artwork: [
-          { src: '/favicon.png', sizes: '192x192', type: 'image/png' },
-          { src: '/favicon.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
         ],
       });
+
       navigator.mediaSession.playbackState = this.playing ? 'playing' : 'paused';
       this.updateMediaSessionPosition();
     } catch {
@@ -878,17 +940,19 @@ export class AudioService {
   }
 
   private updateMediaSessionPosition() {
-    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
-    if (!('setPositionState' in navigator.mediaSession) || this.durationMs <= 0) return;
-
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) {
+      return;
+    }
     try {
+      const durationSec = Math.max(1, this.durationMs / 1000);
+      const positionSec = Math.min(durationSec, Math.max(0, this.currentPositionMs / 1000));
       navigator.mediaSession.setPositionState({
-        duration: Math.max(1, this.durationMs / 1000),
+        duration: durationSec,
         playbackRate: 1.0,
-        position: Math.min(this.durationMs / 1000, Math.max(0, this.currentPositionMs / 1000)),
+        position: positionSec,
       });
     } catch {
-      // Ignore position state errors
+      // Ignore
     }
   }
 }

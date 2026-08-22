@@ -105,12 +105,12 @@ class QuranPlaybackService : MediaSessionService() {
         emitState()
     }
 
-    private fun getReciterUrl(reciterId: String, surah: numberInt): String {
+    private fun getReciterUrl(reciterId: String, surah: Int): String {
         val padded = String.format(Locale.US, "%03d", surah)
         return when (reciterId) {
-            "mishari-alafasy" -> "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/$padded.mp3"
-            "mahmoud-al-husary" -> "https://download.quranicaudio.com/quran/mahmood_khaleel_al-husaree_iza3a/$padded.mp3"
-            "abdul-basit-murattal" -> "https://download.quranicaudio.com/quran/abdul_basit_murattal/$padded.mp3"
+            "mishari-alafasy" -> "https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/$surah.mp3"
+            "mahmoud-al-husary" -> "https://download.quranicaudio.com/qdc/khalil_al_husary/murattal/$surah.mp3"
+            "abdul-basit-murattal" -> "https://download.quranicaudio.com/qdc/abdul_baset/murattal/$surah.mp3"
             else -> "https://server10.mp3quran.net/bader/Rewayat-Hafs-A-n-Assem/$padded.mp3"
         }
     }
@@ -249,5 +249,4 @@ class QuranPlaybackService : MediaSessionService() {
     }
 }
 
-typealias numberInt = Int
 data class AyahRange(val startMs: Long, val endMs: Long)

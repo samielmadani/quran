@@ -4,10 +4,12 @@ import {
   bookmarkOutline,
   checkmarkCircle,
   chevronBack,
+  chevronDown,
   chevronForward,
   chevronUp,
   close,
   createOutline,
+  ellipsisHorizontal,
   globeOutline,
   heart,
   heartOutline,
@@ -15,6 +17,8 @@ import {
   listOutline,
   pause,
   pauseCircleOutline,
+  pin,
+  pinOutline,
   play,
   remove,
   repeatOutline,
@@ -102,17 +106,18 @@ function App() {
   } = useQuranApp();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [portraitMenuOpen, setPortraitMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isEditingBookmarks, setIsEditingBookmarks] = useState(false);
-  const [closingModal, setClosingModal] = useState<'surah' | 'settings' | 'reciters' | null>(null);
+  const [closingModal, setClosingModal] = useState<'surah' | 'settings' | 'reciters' | 'portraitMenu' | null>(null);
   const hideControlsTimer = useRef<number | undefined>(undefined);
   const swipeStartY = useRef<number | null>(null);
 
   const scheduleControlsHide = useCallback(() => {
     window.clearTimeout(hideControlsTimer.current);
     if (isPlaying && !pinned) {
-      hideControlsTimer.current = window.setTimeout(() => setControlsVisible(false), 4000);
+      hideControlsTimer.current = window.setTimeout(() => setControlsVisible(false), 4500);
     }
   }, [isPlaying, pinned]);
 
@@ -142,6 +147,13 @@ function App() {
     return () => window.clearTimeout(hideControlsTimer.current);
   }, [isPlaying, pinned, scheduleControlsHide]);
 
+  const handleCollapseControls = () => {
+    if (pinned) {
+      handleTogglePinned();
+    }
+    setControlsVisible(false);
+  };
+
   const surah = surahs.find((item) => item.number === currentSurah) ?? surahs[0];
   const filteredSurahs = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase();
@@ -155,6 +167,7 @@ function App() {
 
   const openSettings = () => {
     setClosingModal(null);
+    setPortraitMenuOpen(false);
     setSurahListOpen(false);
     setReciterModalOpen(false);
     setSettingsOpen(true);
@@ -162,6 +175,7 @@ function App() {
 
   const openSurahSelector = () => {
     setClosingModal(null);
+    setPortraitMenuOpen(false);
     setSettingsOpen(false);
     setReciterModalOpen(false);
     setIsEditingBookmarks(false);
@@ -170,17 +184,19 @@ function App() {
 
   const openReciterSelector = () => {
     setClosingModal(null);
+    setPortraitMenuOpen(false);
     setSettingsOpen(false);
     setSurahListOpen(false);
     setReciterModalOpen(true);
   };
 
-  const dismissModal = (modal: 'surah' | 'settings' | 'reciters', after?: () => void) => {
+  const dismissModal = (modal: 'surah' | 'settings' | 'reciters' | 'portraitMenu', after?: () => void) => {
     setClosingModal(modal);
     window.setTimeout(() => {
       if (modal === 'surah') setSurahListOpen(false);
       else if (modal === 'settings') setSettingsOpen(false);
       else if (modal === 'reciters') setReciterModalOpen(false);
+      else if (modal === 'portraitMenu') setPortraitMenuOpen(false);
       setClosingModal(null);
       after?.();
     }, 180);
@@ -238,10 +254,12 @@ function App() {
     }
   }, [repeatMode, t]);
 
+  const isCollapsed = !controlsVisible && !pinned;
+
   return (
     <IonApp>
       <div
-        className={`quran-shell ${controlsVisible || pinned ? '' : 'controls-hidden'}`}
+        className={`quran-shell ${isCollapsed ? 'controls-hidden' : ''}`}
         onPointerDown={handleShellPointerDown}
         onPointerUp={handleShellPointerUp}
       >
@@ -315,6 +333,31 @@ function App() {
           </main>
         </IonContent>
 
+        {/* Floating Quick Dock (When Uncollapsed/Expanded): [Pin Button (Left)] + [Downward Chevron (Right)] */}
+        {!isCollapsed && (
+          <div className="expanded-floating-dock" style={{ direction: 'ltr' }}>
+            <button
+              className={`floating-pin-btn ${pinned ? 'is-pinned' : ''}`}
+              type="button"
+              onClick={handleTogglePinned}
+              aria-label={pinned ? t.pinnedControls : t.pinnedControls}
+              title={pinned ? `${t.pinnedControls}: ON` : `${t.pinnedControls}: OFF`}
+            >
+              <IonIcon icon={pinned ? pin : pinOutline} />
+            </button>
+
+            <button
+              className="floating-collapse-btn"
+              type="button"
+              onClick={handleCollapseControls}
+              aria-label="Collapse player"
+              title="Collapse player"
+            >
+              <IonIcon icon={chevronDown} />
+            </button>
+          </div>
+        )}
+
         {/* Full Player & Toolbar */}
         <footer className="app-footer" dir={language === 'ar' ? 'rtl' : 'ltr'}>
           {/* Interactive Live Audio Progress Bar */}
@@ -370,8 +413,21 @@ function App() {
                 </button>
               )}
 
+              {/* Mobile Overflow Menu Button (Visible in Portrait View) */}
               <button
-                className="icon-button settings-button"
+                className={`icon-button footer-overflow-btn ${repeatMode !== 'continuous' ? 'has-active-mode' : ''}`}
+                type="button"
+                onClick={() => setPortraitMenuOpen(true)}
+                aria-label={t.moreOptions}
+                title={t.moreOptions}
+              >
+                <IonIcon icon={ellipsisHorizontal} />
+                {repeatMode !== 'continuous' && <span className="overflow-active-dot" />}
+              </button>
+
+              {/* Desktop / Landscape Controls (Settings, Reciter Live Chip, Repeat Cycle) */}
+              <button
+                className="icon-button settings-button desktop-only"
                 type="button"
                 onClick={openSettings}
                 aria-label={t.settings}
@@ -380,9 +436,8 @@ function App() {
                 <IonIcon icon={settingsOutline} />
               </button>
 
-              {/* Current Reciter + Live Audio Timestamp (Compact) */}
               <button
-                className="reciter-live-chip"
+                className="reciter-live-chip desktop-only"
                 type="button"
                 onClick={openReciterSelector}
                 aria-label={`${activeReciter.name}, ${formatTimestamp(positionMs)}`}
@@ -392,9 +447,8 @@ function App() {
                 <span className="reciter-chip-time">{formatTimestamp(positionMs)}</span>
               </button>
 
-              {/* Single Autoplay / Repeat Mode Cycle Button */}
               <button
-                className={`icon-button repeat-cycle-btn ${repeatMode !== 'continuous' ? 'repeat-active' : ''}`}
+                className={`icon-button repeat-cycle-btn desktop-only ${repeatMode !== 'continuous' ? 'repeat-active' : ''}`}
                 type="button"
                 onClick={handleCycleRepeatMode}
                 aria-label={repeatBtnConfig.title}
@@ -405,9 +459,8 @@ function App() {
               </button>
             </div>
 
-            {/* Center Playback Transport (Strictly Centered via Grid) */}
+            {/* Center Playback Transport (Previous, Play/Pause, Next) */}
             <div className="toolbar-group toolbar-center" onPointerDown={(event) => event.stopPropagation()}>
-              {/* Optional Previous / Swapped Left Button */}
               {showPrevNext && (
                 <button
                   className="transport-button prev-button"
@@ -420,7 +473,7 @@ function App() {
                 </button>
               )}
 
-              {/* Center Play / Pause Button */}
+              {/* Prominent Play / Pause Button */}
               <button
                 className={`play-button ${isPlaying ? 'is-playing' : ''}`}
                 type="button"
@@ -431,7 +484,6 @@ function App() {
                 <IonIcon icon={isPlaying ? pause : play} />
               </button>
 
-              {/* Optional Next / Swapped Right Button */}
               {showPrevNext && (
                 <button
                   className="transport-button next-button"
@@ -474,55 +526,136 @@ function App() {
           </div>
         </footer>
 
-        {/* Collapsed Mini-Player (Play/Pause on the RIGHT side for RHD vehicles) */}
-        <aside
-          className="mini-player"
-          onClick={() => setControlsVisible(true)}
-          role="region"
-          aria-label="Mini audio player"
-        >
-          <div className="mini-progress-track">
-            <div className="mini-progress-fill" style={{ width: `${progressPercent}%` }} />
-          </div>
-          <div className="mini-player-body">
-            {/* Left side: Surah/Reciter info & expand indicator */}
-            <div className="mini-player-title">
-              <span className="mini-player-reciter">{language === 'ar' ? activeReciter.nameArabic : activeReciter.name}</span>
-              <span className="mini-player-divider">—</span>
-              <span className="mini-player-surah">{language === 'ar' ? surah.nameArabic : surah.nameTransliteration}</span>
-              <span className="mini-player-ayah">{toArabicNumerals(currentAyah)}</span>
-              <span className="mini-player-time">{formatTimestamp(positionMs)}</span>
-              <span className="mini-player-expand-symbol">↑</span>
-            </div>
-
-            {/* Right side: Expand and Play/Pause button */}
-            <div className="mini-player-controls-right">
-              <button
-                className="mini-expand-btn"
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setControlsVisible(true);
-                }}
-                aria-label={t.expandPlayer}
-              >
-                <IonIcon icon={chevronUp} />
-              </button>
+        {/* Fully Collapsed Footer State: Bottom Progress, Floating Transport FAB & Upwards Expand Chevron */}
+        {isCollapsed && (
+          <div className="collapsed-controls-wrapper" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            {/* Center Floating Transport Cluster */}
+            <div className="collapsed-transport-cluster" onPointerDown={(e) => e.stopPropagation()}>
+              {showPrevNext && (
+                <button
+                  className="collapsed-nav-btn"
+                  type="button"
+                  onClick={handleLeftNavClick}
+                  aria-label={swapPrevNext ? t.nextAyah : t.previousAyah}
+                  title={swapPrevNext ? t.nextAyah : t.previousAyah}
+                >
+                  <IonIcon icon={swapPrevNext ? chevronForward : chevronBack} />
+                </button>
+              )}
 
               <button
-                className="mini-play-btn"
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void handlePlayPause();
-                }}
+                className={`collapsed-play-fab ${isPlaying ? 'is-playing' : ''}`}
+                onClick={handlePlayPause}
                 aria-label={isPlaying ? t.pause : t.play}
+                title={isPlaying ? t.pause : t.play}
               >
                 <IonIcon icon={isPlaying ? pause : play} />
               </button>
+
+              {showPrevNext && (
+                <button
+                  className="collapsed-nav-btn"
+                  type="button"
+                  onClick={handleRightNavClick}
+                  aria-label={swapPrevNext ? t.previousAyah : t.nextAyah}
+                  title={swapPrevNext ? t.previousAyah : t.nextAyah}
+                >
+                  <IonIcon icon={swapPrevNext ? chevronBack : chevronForward} />
+                </button>
+              )}
+            </div>
+
+            {/* Floating Upwards Chevron on Far Right (Uncollapses Footer without Pinning) */}
+            <button
+              className="collapsed-expand-btn"
+              type="button"
+              onClick={() => {
+                setControlsVisible(true);
+                scheduleControlsHide();
+              }}
+              aria-label={t.expandPlayer}
+              title={t.expandPlayer}
+            >
+              <IonIcon icon={chevronUp} />
+            </button>
+
+            {/* Bottom Edge Audio Progress Bar */}
+            <div
+              className="collapsed-bottom-progress"
+              onClick={handleProgressClick}
+              role="progressbar"
+              aria-valuenow={progressPercent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Audio progress bar"
+            >
+              <div className="collapsed-progress-fill" style={{ width: `${progressPercent}%` }} />
             </div>
           </div>
-        </aside>
+        )}
+
+        {/* Mobile Portrait Overflow Context Menu */}
+        {portraitMenuOpen && (
+          <div
+            className={`modal-overlay portrait-menu-overlay ${closingModal === 'portraitMenu' ? 'is-closing' : ''}`}
+            role="dialog"
+            aria-modal="true"
+            onClick={() => dismissModal('portraitMenu')}
+          >
+            <div
+              className="modal-surface portrait-menu-sheet"
+              dir={language === 'ar' ? 'rtl' : 'ltr'}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="portrait-menu-header">
+                <span className="eyebrow">{t.quickControls}</span>
+                <button
+                  type="button"
+                  className="icon-button compact-close-btn"
+                  onClick={() => dismissModal('portraitMenu')}
+                  aria-label={t.close}
+                >
+                  <IonIcon icon={close} />
+                </button>
+              </div>
+
+              <div className="portrait-menu-items">
+                {/* 1. Reciter Selection Card */}
+                <div className="portrait-menu-card" onClick={() => dismissModal('portraitMenu', openReciterSelector)}>
+                  <div className="menu-card-info">
+                    <span className="menu-card-label">{t.reciter}</span>
+                    <strong className="menu-card-val">{language === 'ar' ? activeReciter.nameArabic : activeReciter.name}</strong>
+                  </div>
+                  <button type="button" className="reciter-btn activate-btn compact">
+                    {t.change}
+                  </button>
+                </div>
+
+                {/* 2. Autoplay / Repeat Mode Row */}
+                <div className="portrait-menu-card" onClick={handleCycleRepeatMode}>
+                  <div className="menu-card-info">
+                    <span className="menu-card-label">{t.player}</span>
+                    <strong className="menu-card-val">{repeatBtnConfig.label} ({repeatMode})</strong>
+                  </div>
+                  <button type="button" className="icon-button compact-repeat-btn">
+                    <IonIcon icon={repeatBtnConfig.icon} />
+                  </button>
+                </div>
+
+                {/* 3. Settings Row */}
+                <div className="portrait-menu-card" onClick={() => dismissModal('portraitMenu', openSettings)}>
+                  <div className="menu-card-info">
+                    <span className="menu-card-label">{t.settingsTitle}</span>
+                    <strong className="menu-card-val">{t.quickPreferences}</strong>
+                  </div>
+                  <button type="button" className="icon-button compact-settings-btn">
+                    <IonIcon icon={settingsOutline} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Surah Selector Modal */}
         {surahListOpen && (
@@ -852,7 +985,7 @@ function App() {
                 <div className="driving-section">
                   <span className="driving-section-title">{t.reading}</span>
 
-                  {/* Show Recently Played (Default OFF) */}
+                  {/* Show Recently Played (Default ON) */}
                   <div className="driving-row">
                     <span className="driving-row-label">{t.showRecentlyPlayed}</span>
                     <button
@@ -865,7 +998,7 @@ function App() {
                     </button>
                   </div>
 
-                  {/* Enable Bookmarks (Default OFF) */}
+                  {/* Enable Bookmarks (Default ON) */}
                   <div className="driving-row">
                     <span className="driving-row-label">{t.enableBookmarks}</span>
                     <button

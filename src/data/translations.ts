@@ -10,6 +10,8 @@ export interface Translations {
   delete: string;
   change: string;
   search: string;
+  moreOptions: string;
+  quickControls: string;
   
   // Surah Header & Picker
   quranIndex: string;
@@ -101,6 +103,8 @@ export const translations: Record<AppLanguage, Translations> = {
     delete: 'Delete',
     change: 'Change',
     search: 'Search',
+    moreOptions: 'More Options',
+    quickControls: 'Quick Controls',
     
     quranIndex: 'Quran Index',
     selectSurah: 'Select Surah',
@@ -183,6 +187,8 @@ export const translations: Record<AppLanguage, Translations> = {
     delete: 'حذف',
     change: 'تغيير',
     search: 'بحث',
+    moreOptions: 'المزيد من الخيارات',
+    quickControls: 'خيارات سريعة',
     
     quranIndex: 'فهرس القرآن',
     selectSurah: 'اختر السورة',
