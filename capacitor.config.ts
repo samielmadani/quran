@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.quran.automotive',
-  appName: 'Quran Automotive',
+  appName: 'Quran',
   webDir: 'dist',
   bundledWebRuntime: false,
   server: {

@@ -1,4 +1,4 @@
-# Quran Automotive PWA
+# Quran PWA
 
 This project is structured for a complete offline-first Quran app built with Ionic, React, TypeScript, PWA, and Capacitor for Android automotive head units.
 
@@ -45,8 +45,10 @@ npm run dev
 ## Production build
 
 ```bash
+cd "C:\Users\samie\source\repos\quran\android"
 npm run build
-npm run android:prepare
+npm run android:build
+.\gradlew.bat assembleDebug
 ```
 
 ## Android run

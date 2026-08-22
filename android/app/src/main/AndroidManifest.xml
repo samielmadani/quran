@@ -10,7 +10,7 @@
 
     <application
         android:allowBackup="true"
-        android:label="Quran Automotive"
+        android:label="Quran"
         android:supportsRtl="true"
         android:theme="@style/Theme.Material3.DayNight.NoActionBar">
         <activity

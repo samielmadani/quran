@@ -97,7 +97,7 @@ export function ReciterModal({
           <div className="reciter-welcome-banner">
             <IonIcon icon={cloudDownloadOutline} className="welcome-banner-icon" />
             <div>
-              <strong>Welcome to Quran Automotive</strong>
+              <strong>Welcome to Quran</strong>
               <p>Download your preferred reciter below to enable offline Quran recitation.</p>
             </div>
           </div>
