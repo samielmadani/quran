@@ -9,7 +9,6 @@ import {
   chevronUp,
   close,
   createOutline,
-  ellipsisHorizontal,
   globeOutline,
   heart,
   heartOutline,
@@ -106,11 +105,10 @@ function App() {
   } = useQuranApp();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [portraitMenuOpen, setPortraitMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isEditingBookmarks, setIsEditingBookmarks] = useState(false);
-  const [closingModal, setClosingModal] = useState<'surah' | 'settings' | 'reciters' | 'portraitMenu' | null>(null);
+  const [closingModal, setClosingModal] = useState<'surah' | 'settings' | 'reciters' | null>(null);
   const hideControlsTimer = useRef<number | undefined>(undefined);
   const swipeStartY = useRef<number | null>(null);
 
@@ -154,6 +152,20 @@ function App() {
     setControlsVisible(false);
   };
 
+  // Tap anywhere that isn't an interactive element to quickly collapse/uncollapse the footer
+  const handleBackgroundToggle = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('button, .ayah, input, a, [role="dialog"], .modal-overlay, [role="progressbar"]')) {
+      return;
+    }
+    setControlsVisible((prev) => {
+      const next = !prev;
+      window.clearTimeout(hideControlsTimer.current);
+      if (next) scheduleControlsHide();
+      return next;
+    });
+  };
+
   const surah = surahs.find((item) => item.number === currentSurah) ?? surahs[0];
   const filteredSurahs = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase();
@@ -167,7 +179,6 @@ function App() {
 
   const openSettings = () => {
     setClosingModal(null);
-    setPortraitMenuOpen(false);
     setSurahListOpen(false);
     setReciterModalOpen(false);
     setSettingsOpen(true);
@@ -175,7 +186,6 @@ function App() {
 
   const openSurahSelector = () => {
     setClosingModal(null);
-    setPortraitMenuOpen(false);
     setSettingsOpen(false);
     setReciterModalOpen(false);
     setIsEditingBookmarks(false);
@@ -184,19 +194,17 @@ function App() {
 
   const openReciterSelector = () => {
     setClosingModal(null);
-    setPortraitMenuOpen(false);
     setSettingsOpen(false);
     setSurahListOpen(false);
     setReciterModalOpen(true);
   };
 
-  const dismissModal = (modal: 'surah' | 'settings' | 'reciters' | 'portraitMenu', after?: () => void) => {
+  const dismissModal = (modal: 'surah' | 'settings' | 'reciters', after?: () => void) => {
     setClosingModal(modal);
     window.setTimeout(() => {
       if (modal === 'surah') setSurahListOpen(false);
       else if (modal === 'settings') setSettingsOpen(false);
       else if (modal === 'reciters') setReciterModalOpen(false);
-      else if (modal === 'portraitMenu') setPortraitMenuOpen(false);
       setClosingModal(null);
       after?.();
     }, 180);
@@ -262,6 +270,7 @@ function App() {
         className={`quran-shell ${isCollapsed ? 'controls-hidden' : ''}`}
         onPointerDown={handleShellPointerDown}
         onPointerUp={handleShellPointerUp}
+        onClick={handleBackgroundToggle}
       >
         <IonContent fullscreen>
           <main className="reading-stage">
@@ -413,21 +422,9 @@ function App() {
                 </button>
               )}
 
-              {/* Mobile Overflow Menu Button (Visible in Portrait View) */}
+              {/* Settings Button (Now shown in both portrait & landscape) */}
               <button
-                className={`icon-button footer-overflow-btn ${repeatMode !== 'continuous' ? 'has-active-mode' : ''}`}
-                type="button"
-                onClick={() => setPortraitMenuOpen(true)}
-                aria-label={t.moreOptions}
-                title={t.moreOptions}
-              >
-                <IonIcon icon={ellipsisHorizontal} />
-                {repeatMode !== 'continuous' && <span className="overflow-active-dot" />}
-              </button>
-
-              {/* Desktop / Landscape Controls (Settings, Reciter Live Chip, Repeat Cycle) */}
-              <button
-                className="icon-button settings-button desktop-only"
+                className="icon-button settings-button"
                 type="button"
                 onClick={openSettings}
                 aria-label={t.settings}
@@ -436,6 +433,7 @@ function App() {
                 <IonIcon icon={settingsOutline} />
               </button>
 
+              {/* Reciter Live Chip (Desktop / Landscape only) */}
               <button
                 className="reciter-live-chip desktop-only"
                 type="button"
@@ -447,8 +445,9 @@ function App() {
                 <span className="reciter-chip-time">{formatTimestamp(positionMs)}</span>
               </button>
 
+              {/* Autoplay / Repeat Cycle Button (Now shown in both portrait & landscape) */}
               <button
-                className={`icon-button repeat-cycle-btn desktop-only ${repeatMode !== 'continuous' ? 'repeat-active' : ''}`}
+                className={`icon-button repeat-cycle-btn ${repeatMode !== 'continuous' ? 'repeat-active' : ''}`}
                 type="button"
                 onClick={handleCycleRepeatMode}
                 aria-label={repeatBtnConfig.title}
@@ -594,70 +593,7 @@ function App() {
           </div>
         )}
 
-        {/* Mobile Portrait Overflow Context Menu */}
-        {portraitMenuOpen && (
-          <div
-            className={`modal-overlay portrait-menu-overlay ${closingModal === 'portraitMenu' ? 'is-closing' : ''}`}
-            role="dialog"
-            aria-modal="true"
-            onClick={() => dismissModal('portraitMenu')}
-          >
-            <div
-              className="modal-surface portrait-menu-sheet"
-              dir={language === 'ar' ? 'rtl' : 'ltr'}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="portrait-menu-header">
-                <span className="eyebrow">{t.quickControls}</span>
-                <button
-                  type="button"
-                  className="icon-button compact-close-btn"
-                  onClick={() => dismissModal('portraitMenu')}
-                  aria-label={t.close}
-                >
-                  <IonIcon icon={close} />
-                </button>
-              </div>
-
-              <div className="portrait-menu-items">
-                {/* 1. Reciter Selection Card */}
-                <div className="portrait-menu-card" onClick={() => dismissModal('portraitMenu', openReciterSelector)}>
-                  <div className="menu-card-info">
-                    <span className="menu-card-label">{t.reciter}</span>
-                    <strong className="menu-card-val">{language === 'ar' ? activeReciter.nameArabic : activeReciter.name}</strong>
-                  </div>
-                  <button type="button" className="reciter-btn activate-btn compact">
-                    {t.change}
-                  </button>
-                </div>
-
-                {/* 2. Autoplay / Repeat Mode Row */}
-                <div className="portrait-menu-card" onClick={handleCycleRepeatMode}>
-                  <div className="menu-card-info">
-                    <span className="menu-card-label">{t.player}</span>
-                    <strong className="menu-card-val">{repeatBtnConfig.label} ({repeatMode})</strong>
-                  </div>
-                  <button type="button" className="icon-button compact-repeat-btn">
-                    <IonIcon icon={repeatBtnConfig.icon} />
-                  </button>
-                </div>
-
-                {/* 3. Settings Row */}
-                <div className="portrait-menu-card" onClick={() => dismissModal('portraitMenu', openSettings)}>
-                  <div className="menu-card-info">
-                    <span className="menu-card-label">{t.settingsTitle}</span>
-                    <strong className="menu-card-val">{t.quickPreferences}</strong>
-                  </div>
-                  <button type="button" className="icon-button compact-settings-btn">
-                    <IonIcon icon={settingsOutline} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Surah Selector Modal */}
+        {/* Surah Selector Modal (Full Screen, non-sticky) */}
         {surahListOpen && (
           <div
             className={`modal-overlay ${closingModal === 'surah' ? 'is-closing' : ''}`}
@@ -832,7 +768,7 @@ function App() {
           </div>
         )}
 
-        {/* Driving-Optimized Quick Glance Settings Modal */}
+        {/* Settings Modal (Full Screen, non-sticky) */}
         {settingsOpen && (
           <div
             className={`modal-overlay ${closingModal === 'settings' ? 'is-closing' : ''}`}
@@ -906,7 +842,7 @@ function App() {
                 {/* 3. Player Preferences */}
                 <div className="driving-section">
                   <span className="driving-section-title">{t.player}</span>
-                  
+
                   {/* Pin Player */}
                   <div className="driving-row">
                     <span className="driving-row-label">{t.pinnedControls}</span>
@@ -1010,7 +946,7 @@ function App() {
                       <span />
                     </button>
                   </div>
-                  
+
                   {/* Auto-scroll */}
                   <div className="driving-row">
                     <span className="driving-row-label">{t.autoScroll}</span>
@@ -1031,7 +967,7 @@ function App() {
                       <div className="stepper compact">
                         <button
                           type="button"
-                          onClick={() => setTextSize((value) => Math.max(1.8, Number((value - 0.1).toFixed(1))))}
+                          onClick={() => setTextSize((value) => Math.max(1.4, Number((value - 0.1).toFixed(1))))}
                           aria-label="Decrease text size"
                         >
                           <IonIcon icon={remove} />
@@ -1039,7 +975,7 @@ function App() {
                         <span>{textSize.toFixed(1)}</span>
                         <button
                           type="button"
-                          onClick={() => setTextSize((value) => Math.min(4.5, Number((value + 0.1).toFixed(1))))}
+                          onClick={() => setTextSize((value) => Math.min(5.5, Number((value + 0.1).toFixed(1))))}
                           aria-label="Increase text size"
                         >
                           <IonIcon icon={add} />
@@ -1063,19 +999,29 @@ function App() {
 
                 {/* 6. Subtle, Respectful Dedication to late father Ali Elmadani */}
                 <div className="father-dedication-card" dir="rtl">
+                  <div className="dedication-ornament">
+                    <span className="dedication-ornament-line" />
+                    <span className="dedication-ornament-gem">✦</span>
+                    <span className="dedication-ornament-line" />
+                  </div>
                   <span className="dedication-text">
                     إهداء إلى والدِي الراحل علي المدني، رحمه الله
                   </span>
                   <span className="dedication-sub">
                     رحمه الله رحمةً واسعة
                   </span>
+                  <div className="dedication-ornament">
+                    <span className="dedication-ornament-line" />
+                    <span className="dedication-ornament-gem">✦</span>
+                    <span className="dedication-ornament-line" />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Reciter Management Modal */}
+        {/* Reciter Management Modal (Full Screen, non-sticky) */}
         <ReciterModal
           isOpen={reciterModalOpen}
           isClosing={closingModal === 'reciters'}

@@ -71,11 +71,14 @@ export interface Translations {
   timerEndOfSurah: string;
   
   // Font Size Presets
+  fontTiny: string;
+  fontExtraSmall: string;
   fontSmall: string;
   fontMedium: string;
   fontLarge: string;
   fontExtraLarge: string;
   fontHuge: string;
+  fontMassive: string;
 
   // Reciters Modal
   audioAndRecitations: string;
@@ -158,11 +161,14 @@ export const translations: Record<AppLanguage, Translations> = {
     timerEndOfAyah: 'End of Ayah',
     timerEndOfSurah: 'End of Surah',
     
+    fontTiny: 'Tiny',
+    fontExtraSmall: 'X-Small',
     fontSmall: 'Small',
     fontMedium: 'Medium',
     fontLarge: 'Large',
-    fontExtraLarge: 'Extra Large',
+    fontExtraLarge: 'X-Large',
     fontHuge: 'Huge',
+    fontMassive: 'Massive',
 
     audioAndRecitations: 'Audio & Recitations',
     chooseReciter: 'Choose Reciter',
@@ -242,11 +248,14 @@ export const translations: Record<AppLanguage, Translations> = {
     timerEndOfAyah: 'نهاية الآية',
     timerEndOfSurah: 'نهاية السورة',
     
+    fontTiny: 'صغير جداً',
+    fontExtraSmall: 'أصغر',
     fontSmall: 'صغير',
     fontMedium: 'متوسط',
     fontLarge: 'كبير',
     fontExtraLarge: 'كبير جداً',
     fontHuge: 'ضخم',
+    fontMassive: 'أضخم',
 
     audioAndRecitations: 'التلاوات الصوتية',
     chooseReciter: 'اختر القارئ',
