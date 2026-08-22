@@ -1,13 +1,15 @@
 import { IonIcon } from '@ionic/react';
 import { play, close } from 'ionicons/icons';
 import { quranService } from '../services/quranService';
-import { getReciterById } from '../data/reciterRegistry';
+import type { Translations } from '../data/translations';
 
 interface ContinueListeningCardProps {
   surahNumber: number;
   ayahNumber: number;
   reciterId: string;
   positionMs?: number;
+  t?: Translations;
+  language?: 'en' | 'ar';
   onContinue: () => void;
   onDismiss: () => void;
 }
@@ -26,52 +28,47 @@ const formatTimestamp = (ms: number): string => {
 export function ContinueListeningCard({
   surahNumber,
   ayahNumber,
-  reciterId,
   positionMs = 0,
+  language = 'en',
   onContinue,
   onDismiss,
 }: ContinueListeningCardProps) {
   const surah = quranService.getSurah(surahNumber);
-  const reciter = getReciterById(reciterId);
 
   return (
-    <div className="continue-listening-card" role="region" aria-label="Continue Listening">
-      <div className="continue-listening-info">
-        <span className="continue-eyebrow">Continue Listening</span>
-        <strong className="continue-surah-title">
-          {surah.nameTransliteration} • Ayah {ayahNumber}
-        </strong>
-        <div className="continue-meta-row">
-          <span className="continue-timestamp">{formatTimestamp(positionMs)}</span>
-          <span className="continue-dot">•</span>
-          <span className="continue-reciter">{reciter.name}</span>
-        </div>
-      </div>
-
-      <div className="continue-actions-row">
-        <button
-          type="button"
-          className="continue-resume-btn"
-          onClick={onContinue}
-          aria-label={`Resume listening to ${surah.nameTransliteration} at ${formatTimestamp(positionMs)}`}
-        >
+    <div className="continue-listening-card compact-banner" role="region" aria-label="Continue Listening" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <button
+        type="button"
+        className="continue-main-pill"
+        onClick={onContinue}
+        aria-label={`Continue listening to ${surah.nameTransliteration} ${ayahNumber}`}
+      >
+        <span className="continue-play-dot">
           <IonIcon icon={play} />
-          <span>RESUME</span>
-        </button>
+        </span>
+        <span className="continue-label">
+          {language === 'ar' ? 'متابعة الاستماع:' : 'Continue:'}
+        </span>
+        <strong className="continue-surah-title">
+          {language === 'ar' ? `${surah.nameArabic} • آية ${ayahNumber}` : `${surah.nameTransliteration} • Ayah ${ayahNumber}`}
+        </strong>
+        <span className="continue-timestamp">
+          ({formatTimestamp(positionMs)})
+        </span>
+      </button>
 
-        <button
-          type="button"
-          className="continue-dismiss-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDismiss();
-          }}
-          aria-label="Dismiss continue listening card"
-          title="Dismiss"
-        >
-          <IonIcon icon={close} />
-        </button>
-      </div>
+      <button
+        type="button"
+        className="continue-dismiss-btn compact"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDismiss();
+        }}
+        aria-label="Dismiss"
+        title="Dismiss"
+      >
+        <IonIcon icon={close} />
+      </button>
     </div>
   );
 }

@@ -12,12 +12,15 @@ import {
 import { RECITERS, type Reciter } from '../data/reciterRegistry';
 import { reciterStorage } from '../services/storage';
 import { reciterDownloadManager, type DownloadProgress } from '../services/reciterDownloadManager';
+import type { Translations } from '../data/translations';
 
 interface ReciterModalProps {
   isOpen: boolean;
   isClosing: boolean;
   activeReciterId: string;
   isFirstStartup?: boolean;
+  t: Translations;
+  language: 'en' | 'ar';
   onClose: () => void;
   onSelectReciter: (reciterId: string) => void;
 }
@@ -27,6 +30,8 @@ export function ReciterModal({
   isClosing,
   activeReciterId,
   isFirstStartup = false,
+  t,
+  language,
   onClose,
   onSelectReciter,
 }: ReciterModalProps) {
@@ -90,7 +95,7 @@ export function ReciterModal({
 
   const handleDelete = async (reciter: Reciter, event?: React.MouseEvent) => {
     event?.stopPropagation();
-    if (window.confirm(`Delete downloaded offline audio for ${reciter.name}?`)) {
+    if (window.confirm(`${t.deleteDownload} (${reciter.name})?`)) {
       if (reciterDownloadManager.isDownloadingReciter(reciter.id)) {
         reciterDownloadManager.cancelDownload();
       }
@@ -107,14 +112,14 @@ export function ReciterModal({
       aria-labelledby="reciter-modal-title"
       onClick={onClose}
     >
-      <div className="modal-surface reciter-surface" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-surface reciter-surface" dir={language === 'ar' ? 'rtl' : 'ltr'} onClick={(e) => e.stopPropagation()}>
         <div className="modal-heading">
           <div>
-            <span className="eyebrow">Audio & Recitations</span>
-            <h2 id="reciter-modal-title">Choose Reciter</h2>
+            <span className="eyebrow">{t.audioAndRecitations}</span>
+            <h2 id="reciter-modal-title">{t.chooseReciter}</h2>
           </div>
           {!isFirstStartup && (
-            <button className="icon-button" type="button" onClick={onClose} aria-label="Close reciter modal">
+            <button className="icon-button" type="button" onClick={onClose} aria-label={t.close}>
               <IonIcon icon={close} />
             </button>
           )}
@@ -124,27 +129,31 @@ export function ReciterModal({
           <div className="reciter-welcome-banner">
             <IonIcon icon={cloudDownloadOutline} className="welcome-banner-icon" />
             <div>
-              <strong>Select Your Preferred Reciter</strong>
-              <p>Choose any reciter to begin listening. You can stream instantly or download for offline playback.</p>
+              <strong>{language === 'ar' ? 'اختر قارئك المفضل' : 'Select Your Preferred Reciter'}</strong>
+              <p>
+                {language === 'ar'
+                  ? 'اختر أي قارئ للبدء في الاستماع فوراً أو تحميل التلاوات بدون إنترنت.'
+                  : 'Choose any reciter to begin listening. You can stream instantly or download for offline playback.'}
+              </p>
             </div>
           </div>
         )}
 
-        {/* Search input with clear X button (Identical to Surah selector) */}
+        {/* Search input with clear X button */}
         <label className="search-field">
           <IonIcon icon={searchOutline} />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search reciter by name or style"
-            aria-label="Search reciter"
+            placeholder={t.searchReciterPlaceholder}
+            aria-label={t.chooseReciter}
           />
           {searchQuery && (
             <button
               type="button"
               className="search-clear-btn"
               onClick={() => setSearchQuery('')}
-              aria-label="Clear search"
+              aria-label={t.clearSearch}
             >
               <IonIcon icon={close} />
             </button>
@@ -177,34 +186,34 @@ export function ReciterModal({
                 <div className="reciter-card-header">
                   <div className="reciter-names">
                     <span className="reciter-name-arabic">{reciter.nameArabic}</span>
-                    <strong className="reciter-name-latin">{reciter.name}</strong>
+                    <strong className="reciter-name-latin">{language === 'ar' ? reciter.nameArabic : reciter.name}</strong>
                     <small className="reciter-style">{reciter.style}</small>
                   </div>
 
                   <div className="reciter-badges">
                     {isActive && (
                       <span className="reciter-badge active-badge">
-                        <IonIcon icon={checkmarkCircle} /> Active Reciter
+                        <IonIcon icon={checkmarkCircle} /> {t.activeReciter}
                       </span>
                     )}
                     {isFullyInstalled && !isCurrentlyDownloading && (
                       <span className="reciter-badge installed-badge">
-                        Offline Ready ({count}/{reciter.totalSurahs})
+                        {t.offlineReady} ({count}/{reciter.totalSurahs})
                       </span>
                     )}
                     {isPartiallyInstalled && !isCurrentlyDownloading && (
                       <span className="reciter-badge partial-badge">
-                        Offline ({count}/{reciter.totalSurahs})
+                        {t.offlinePartial} ({count}/{reciter.totalSurahs})
                       </span>
                     )}
                     {!isFullyInstalled && !isPartiallyInstalled && !isCurrentlyDownloading && (
                       <span className="reciter-badge not-installed-badge">
-                        <IonIcon icon={radioOutline} /> Stream & Offline
+                        <IonIcon icon={radioOutline} /> {t.streamAndOffline}
                       </span>
                     )}
                     {isCurrentlyDownloading && (
                       <span className="reciter-badge downloading-badge">
-                        Downloading {downloadProgress.progressPercent}%
+                        {t.downloadingPercent} {downloadProgress.progressPercent}%
                       </span>
                     )}
                   </div>
@@ -217,8 +226,12 @@ export function ReciterModal({
                 {isCurrentlyDownloading && (
                   <div className="reciter-download-progress" onClick={(e) => e.stopPropagation()}>
                     <div className="progress-info-row">
-                      <span>Downloading Surah {downloadProgress.currentSurah} of {downloadProgress.totalSurahs}</span>
-                      <span>{downloadProgress.downloadedCount}/{downloadProgress.totalSurahs} surahs ({downloadProgress.progressPercent}%)</span>
+                      <span>
+                        {language === 'ar'
+                          ? `تحميل سورة ${downloadProgress.currentSurah} من ${downloadProgress.totalSurahs}`
+                          : `Downloading Surah ${downloadProgress.currentSurah} of ${downloadProgress.totalSurahs}`}
+                      </span>
+                      <span>{downloadProgress.downloadedCount}/{downloadProgress.totalSurahs} ({downloadProgress.progressPercent}%)</span>
                     </div>
                     <div className="download-progress-track">
                       <div
@@ -243,11 +256,11 @@ export function ReciterModal({
                       className="reciter-btn activate-btn"
                       onClick={() => handleSelect(reciter.id)}
                     >
-                      <IonIcon icon={checkmarkCircle} /> Select Reciter
+                      <IonIcon icon={checkmarkCircle} /> {t.chooseReciter}
                     </button>
                   ) : (
                     <button type="button" className="reciter-btn active-state-btn" disabled>
-                      <IonIcon icon={checkmarkCircle} /> Currently Active
+                      <IonIcon icon={checkmarkCircle} /> {t.currentlyActive}
                     </button>
                   )}
 
@@ -259,7 +272,7 @@ export function ReciterModal({
                       onClick={(e) => void handleStartDownload(reciter, e)}
                     >
                       <IonIcon icon={cloudDownloadOutline} />
-                      {count > 0 ? `Resume Download (${count}/${reciter.totalSurahs})` : 'Download Offline Audio'}
+                      {count > 0 ? `${t.resumeDownload} (${count}/${reciter.totalSurahs})` : t.downloadOfflineAudio}
                     </button>
                   )}
 
@@ -270,7 +283,7 @@ export function ReciterModal({
                       className="reciter-btn cancel-btn"
                       onClick={(e) => handleCancelDownload(e)}
                     >
-                      <IonIcon icon={pauseCircleOutline} /> Cancel Download
+                      <IonIcon icon={pauseCircleOutline} /> {t.cancelDownload}
                     </button>
                   )}
 
@@ -280,9 +293,9 @@ export function ReciterModal({
                       type="button"
                       className="reciter-btn delete-btn"
                       onClick={(e) => void handleDelete(reciter, e)}
-                      title="Delete downloaded offline audio files"
+                      title={t.deleteDownload}
                     >
-                      <IonIcon icon={trashOutline} /> Delete Download
+                      <IonIcon icon={trashOutline} /> {t.delete}
                     </button>
                   )}
                 </div>

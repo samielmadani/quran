@@ -1,4 +1,7 @@
 import { badrAlTurkiTimings } from './badrAlTurkiTimings';
+import { mishariAlafasyTimings } from './mishariAlafasyTimings';
+import { mahmoudAlHusaryTimings } from './mahmoudAlHusaryTimings';
+import { abdulBasitTimings } from './abdulBasitTimings';
 import type { AyahTiming } from '../types/audio';
 
 export interface Reciter {
@@ -34,7 +37,8 @@ export const RECITERS: Reciter[] = [
     description: 'World-renowned recitation by Sheikh Mishary Rashid Alafasy.',
     totalSurahs: 114,
     audioUrlPattern: (surahNumber: number) =>
-      `https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/${String(surahNumber).padStart(3, '0')}.mp3`,
+      `https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${surahNumber}.mp3`,
+    timings: mishariAlafasyTimings,
     approxSizeBytes: 890000000,
   },
   {
@@ -45,7 +49,8 @@ export const RECITERS: Reciter[] = [
     description: 'Standard tajweed reference recitation by Sheikh Mahmoud Khalil Al-Husary.',
     totalSurahs: 114,
     audioUrlPattern: (surahNumber: number) =>
-      `https://download.quranicaudio.com/quran/mahmood_khaleel_al-husaree_iza3a/${String(surahNumber).padStart(3, '0')}.mp3`,
+      `https://download.quranicaudio.com/qdc/khalil_al_husary/murattal/${surahNumber}.mp3`,
+    timings: mahmoudAlHusaryTimings,
     approxSizeBytes: 950000000,
   },
   {
@@ -56,7 +61,8 @@ export const RECITERS: Reciter[] = [
     description: 'Classic Murattal recitation by Sheikh Abdul Basit Abdul Samad.',
     totalSurahs: 114,
     audioUrlPattern: (surahNumber: number) =>
-      `https://download.quranicaudio.com/quran/abdul_basit_murattal/${String(surahNumber).padStart(3, '0')}.mp3`,
+      `https://download.quranicaudio.com/qdc/abdul_baset/murattal/${surahNumber}.mp3`,
+    timings: abdulBasitTimings,
     approxSizeBytes: 920000000,
   },
 ];
@@ -66,4 +72,3 @@ export const DEFAULT_RECITER_ID = 'badr-al-turki';
 export const getReciterById = (reciterId: string): Reciter => {
   return RECITERS.find((r) => r.id === reciterId) ?? RECITERS[0];
 };
-

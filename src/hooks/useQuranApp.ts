@@ -5,6 +5,7 @@ import { audioService } from '../services/audioService';
 import { reciterStorage } from '../services/storage';
 import { reciterDownloadManager, type DownloadProgress } from '../services/reciterDownloadManager';
 import { DEFAULT_RECITER_ID, getReciterById } from '../data/reciterRegistry';
+import { translations, type AppLanguage } from '../data/translations';
 import type { RepeatMode, SleepTimerMode, RecentItem } from '../types/audio';
 
 const DEFAULT_SURAH = 1;
@@ -12,14 +13,15 @@ const DEFAULT_AYAH = 1;
 const UI_SETTINGS_STORAGE_KEY = 'quran_ui_settings';
 
 export const FONT_SIZE_PRESETS = [
-  { id: 'small', label: 'Small', size: 2.0 },
-  { id: 'medium', label: 'Medium', size: 2.5 },
-  { id: 'large', label: 'Large', size: 3.0 },
-  { id: 'xlarge', label: 'Extra Large', size: 3.6 },
-  { id: 'huge', label: 'Huge', size: 4.2 },
+  { id: 'small', labelKey: 'fontSmall', size: 2.0 },
+  { id: 'medium', labelKey: 'fontMedium', size: 2.5 },
+  { id: 'large', labelKey: 'fontLarge', size: 3.0 },
+  { id: 'xlarge', labelKey: 'fontExtraLarge', size: 3.6 },
+  { id: 'huge', labelKey: 'fontHuge', size: 4.2 },
 ] as const;
 
 interface StoredUiSettings {
+  language?: AppLanguage;
   pinned?: boolean;
   showPrevNext?: boolean;
   swapPrevNext?: boolean;
@@ -43,6 +45,7 @@ function getStoredUiSettings(): StoredUiSettings {
 export function useQuranApp() {
   const initialSettings = useMemo(() => getStoredUiSettings(), []);
 
+  const [language, setLanguage] = useState<AppLanguage>(() => (initialSettings.language === 'ar' ? 'ar' : 'en'));
   const [currentSurah, setCurrentSurah] = useState(DEFAULT_SURAH);
   const [currentAyah, setCurrentAyah] = useState(DEFAULT_AYAH);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -80,11 +83,13 @@ export function useQuranApp() {
 
   const surahs = useMemo(() => quranService.getSurahs(), []);
   const activeReciter = useMemo(() => getReciterById(activeReciterId), [activeReciterId]);
+  const t = useMemo(() => translations[language], [language]);
 
   // Save UI settings to localStorage & Capacitor Preferences
   const saveUiSettings = useCallback((updates: Partial<StoredUiSettings>) => {
     try {
       const current: StoredUiSettings = {
+        language,
         pinned,
         showPrevNext,
         swapPrevNext,
@@ -101,7 +106,7 @@ export function useQuranApp() {
     } catch {
       // Ignore
     }
-  }, [pinned, showPrevNext, swapPrevNext, textSize, autoScroll, showRecentlyPlayed, enableBookmarks, bookmarkedSurahs]);
+  }, [language, pinned, showPrevNext, swapPrevNext, textSize, autoScroll, showRecentlyPlayed, enableBookmarks, bookmarkedSurahs]);
 
   // Subscribe to audioService
   useEffect(() => {
@@ -128,6 +133,7 @@ export function useQuranApp() {
         const pref = await Preferences.get({ key: UI_SETTINGS_STORAGE_KEY });
         if (pref.value) {
           const s: StoredUiSettings = JSON.parse(pref.value);
+          if (s.language === 'en' || s.language === 'ar') setLanguage(s.language);
           if (typeof s.pinned === 'boolean') setPinned(s.pinned);
           if (typeof s.showPrevNext === 'boolean') setShowPrevNext(s.showPrevNext);
           if (typeof s.swapPrevNext === 'boolean') setSwapPrevNext(s.swapPrevNext);
@@ -314,7 +320,14 @@ export function useQuranApp() {
     });
   };
 
+  const handleSetLanguage = (lang: AppLanguage) => {
+    setLanguage(lang);
+    saveUiSettings({ language: lang });
+  };
+
   return {
+    language,
+    t,
     surahs,
     currentSurah,
     currentAyah,
@@ -343,6 +356,7 @@ export function useQuranApp() {
     recentlyPlayed,
     viewRef,
     setPinned,
+    setLanguage: handleSetLanguage,
     setTextSize: handleSetTextSize,
     setAutoScroll: handleSetAutoScroll,
     setSurahListOpen,

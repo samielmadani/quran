@@ -1,7 +1,6 @@
 import { IonApp, IonContent, IonIcon } from '@ionic/react';
 import {
   add,
-  bookmark,
   bookmarkOutline,
   checkmarkCircle,
   chevronBack,
@@ -9,6 +8,9 @@ import {
   chevronUp,
   close,
   createOutline,
+  globeOutline,
+  heart,
+  heartOutline,
   infiniteOutline,
   listOutline,
   pause,
@@ -18,8 +20,6 @@ import {
   repeatOutline,
   searchOutline,
   settingsOutline,
-  star,
-  starOutline,
   timeOutline,
 } from 'ionicons/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -50,6 +50,8 @@ const formatTimestamp = (ms: number): string => {
 
 function App() {
   const {
+    language,
+    t,
     surahs,
     currentSurah,
     currentAyah,
@@ -77,6 +79,7 @@ function App() {
     showContinueCard,
     recentlyPlayed,
     viewRef,
+    setLanguage,
     setTextSize,
     setAutoScroll,
     setSurahListOpen,
@@ -224,16 +227,16 @@ function App() {
   const repeatBtnConfig = useMemo(() => {
     switch (repeatMode) {
       case 'repeat_single':
-        return { icon: repeatOutline, label: '1×', title: 'Repeat Current Ayah (Tap to cycle)' };
+        return { icon: repeatOutline, label: t.repeatAyah, title: `${t.repeatAyah} (Tap to cycle)` };
       case 'repeat_surah':
-        return { icon: repeatOutline, label: 'Surah', title: 'Repeat Surah (Tap to cycle)' };
+        return { icon: repeatOutline, label: t.repeatSurah, title: `${t.repeatSurah} (Tap to cycle)` };
       case 'off':
-        return { icon: pauseCircleOutline, label: 'Off', title: 'Autoplay Off (Stop after ayah)' };
+        return { icon: pauseCircleOutline, label: t.autoplayOff, title: `${t.autoplayOff} (Stop after ayah)` };
       case 'continuous':
       default:
-        return { icon: infiniteOutline, label: 'Auto', title: 'Autoplay Continuous (Tap to cycle)' };
+        return { icon: infiniteOutline, label: t.autoplay, title: `${t.autoplay} (Tap to cycle)` };
     }
-  }, [repeatMode]);
+  }, [repeatMode, t]);
 
   return (
     <IonApp>
@@ -244,13 +247,15 @@ function App() {
       >
         <IonContent fullscreen>
           <main className="reading-stage">
-            {/* Continue Listening Hero Banner */}
+            {/* Subtle, Compact Continue Listening Banner */}
             {showContinueCard && lastSession && !isPlaying && (
               <ContinueListeningCard
                 surahNumber={lastSession.surah}
                 ayahNumber={lastSession.ayah}
                 reciterId={lastSession.reciterId}
                 positionMs={lastSession.positionMs}
+                t={t}
+                language={language}
                 onContinue={handleContinueListening}
                 onDismiss={() => setShowContinueCard(false)}
               />
@@ -311,7 +316,7 @@ function App() {
         </IonContent>
 
         {/* Full Player & Toolbar */}
-        <footer className="app-footer">
+        <footer className="app-footer" dir={language === 'ar' ? 'rtl' : 'ltr'}>
           {/* Interactive Live Audio Progress Bar */}
           <div
             className="audio-progress"
@@ -334,7 +339,7 @@ function App() {
                   className="circular-download-btn"
                   type="button"
                   onClick={openReciterSelector}
-                  title={`Downloading Surah ${downloadProgress.currentSurah}/${downloadProgress.totalSurahs} (${downloadProgress.progressPercent}%) - Tap to view`}
+                  title={`Downloading Surah ${downloadProgress.currentSurah}/${downloadProgress.totalSurahs} (${downloadProgress.progressPercent}%)`}
                   aria-label={`Download progress: ${downloadProgress.progressPercent}%`}
                 >
                   <svg className="progress-ring" width="38" height="38" viewBox="0 0 36 36">
@@ -369,8 +374,8 @@ function App() {
                 className="icon-button settings-button"
                 type="button"
                 onClick={openSettings}
-                aria-label="Open settings"
-                title="Settings"
+                aria-label={t.settings}
+                title={t.settings}
               >
                 <IonIcon icon={settingsOutline} />
               </button>
@@ -380,10 +385,10 @@ function App() {
                 className="reciter-live-chip"
                 type="button"
                 onClick={openReciterSelector}
-                aria-label={`Reciter: ${activeReciter.name}, Audio position: ${formatTimestamp(positionMs)}`}
-                title={`Reciter: ${activeReciter.name} • ${formatTimestamp(positionMs)}`}
+                aria-label={`${activeReciter.name}, ${formatTimestamp(positionMs)}`}
+                title={`${activeReciter.name} • ${formatTimestamp(positionMs)}`}
               >
-                <span className="reciter-chip-name">{activeReciter.name}</span>
+                <span className="reciter-chip-name">{language === 'ar' ? activeReciter.nameArabic : activeReciter.name}</span>
                 <span className="reciter-chip-time">{formatTimestamp(positionMs)}</span>
               </button>
 
@@ -408,8 +413,8 @@ function App() {
                   className="transport-button prev-button"
                   type="button"
                   onClick={handleLeftNavClick}
-                  aria-label={swapPrevNext ? 'Next ayah' : 'Previous ayah'}
-                  title={swapPrevNext ? 'Next ayah' : 'Previous ayah'}
+                  aria-label={swapPrevNext ? t.nextAyah : t.previousAyah}
+                  title={swapPrevNext ? t.nextAyah : t.previousAyah}
                 >
                   <IonIcon icon={swapPrevNext ? chevronForward : chevronBack} />
                 </button>
@@ -420,8 +425,8 @@ function App() {
                 className={`play-button ${isPlaying ? 'is-playing' : ''}`}
                 type="button"
                 onClick={handlePlayPause}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-                title={isPlaying ? 'Pause' : 'Play'}
+                aria-label={isPlaying ? t.pause : t.play}
+                title={isPlaying ? t.pause : t.play}
               >
                 <IonIcon icon={isPlaying ? pause : play} />
               </button>
@@ -432,8 +437,8 @@ function App() {
                   className="transport-button next-button"
                   type="button"
                   onClick={handleRightNavClick}
-                  aria-label={swapPrevNext ? 'Previous ayah' : 'Next ayah'}
-                  title={swapPrevNext ? 'Previous ayah' : 'Next ayah'}
+                  aria-label={swapPrevNext ? t.previousAyah : t.nextAyah}
+                  title={swapPrevNext ? t.previousAyah : t.nextAyah}
                 >
                   <IonIcon icon={swapPrevNext ? chevronBack : chevronForward} />
                 </button>
@@ -446,12 +451,12 @@ function App() {
                 className="surah-heading-btn"
                 type="button"
                 onClick={openSurahSelector}
-                aria-label="Choose surah"
+                aria-label={t.selectSurah}
               >
                 <div className="surah-info">
                   <span className="surah-heading-arabic">{surah.nameArabic}</span>
                   <span className="surah-heading-latin">
-                    {surah.nameTransliteration} <b>•</b> {toArabicNumerals(currentAyah)}
+                    {language === 'ar' ? surah.nameArabic : surah.nameTransliteration} <b>•</b> {toArabicNumerals(currentAyah)}
                   </span>
                 </div>
               </button>
@@ -460,8 +465,8 @@ function App() {
                 className="icon-button surah-list-btn"
                 type="button"
                 onClick={openSurahSelector}
-                aria-label="Open surah selector"
-                title="Surah index"
+                aria-label={t.surahIndex}
+                title={t.surahIndex}
               >
                 <IonIcon icon={listOutline} />
               </button>
@@ -469,7 +474,7 @@ function App() {
           </div>
         </footer>
 
-        {/* Collapsed Mini-Player */}
+        {/* Collapsed Mini-Player (Play/Pause on the RIGHT side for RHD vehicles) */}
         <aside
           className="mini-player"
           onClick={() => setControlsVisible(true)}
@@ -480,38 +485,42 @@ function App() {
             <div className="mini-progress-fill" style={{ width: `${progressPercent}%` }} />
           </div>
           <div className="mini-player-body">
-            <button
-              className="mini-play-btn"
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                void handlePlayPause();
-              }}
-              aria-label={isPlaying ? 'Pause' : 'Play'}
-            >
-              <IonIcon icon={isPlaying ? pause : play} />
-            </button>
-
+            {/* Left side: Surah/Reciter info & expand indicator */}
             <div className="mini-player-title">
-              <span className="mini-player-reciter">{activeReciter.name}</span>
+              <span className="mini-player-reciter">{language === 'ar' ? activeReciter.nameArabic : activeReciter.name}</span>
               <span className="mini-player-divider">—</span>
-              <span className="mini-player-surah">{surah.nameTransliteration}</span>
-              <span className="mini-player-ayah">{currentAyah}</span>
+              <span className="mini-player-surah">{language === 'ar' ? surah.nameArabic : surah.nameTransliteration}</span>
+              <span className="mini-player-ayah">{toArabicNumerals(currentAyah)}</span>
               <span className="mini-player-time">{formatTimestamp(positionMs)}</span>
               <span className="mini-player-expand-symbol">↑</span>
             </div>
 
-            <button
-              className="mini-expand-btn"
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setControlsVisible(true);
-              }}
-              aria-label="Expand player"
-            >
-              <IonIcon icon={chevronUp} />
-            </button>
+            {/* Right side: Expand and Play/Pause button */}
+            <div className="mini-player-controls-right">
+              <button
+                className="mini-expand-btn"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setControlsVisible(true);
+                }}
+                aria-label={t.expandPlayer}
+              >
+                <IonIcon icon={chevronUp} />
+              </button>
+
+              <button
+                className="mini-play-btn"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void handlePlayPause();
+                }}
+                aria-label={isPlaying ? t.pause : t.play}
+              >
+                <IonIcon icon={isPlaying ? pause : play} />
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -524,17 +533,17 @@ function App() {
             aria-labelledby="surah-modal-title"
             onClick={() => dismissModal('surah')}
           >
-            <div className="modal-surface surah-surface" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-surface surah-surface" dir={language === 'ar' ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
               <div className="modal-heading">
                 <div>
-                  <span className="eyebrow">Quran index</span>
-                  <h2 id="surah-modal-title">Select Surah</h2>
+                  <span className="eyebrow">{t.quranIndex}</span>
+                  <h2 id="surah-modal-title">{t.selectSurah}</h2>
                 </div>
                 <button
                   className="icon-button"
                   type="button"
                   onClick={() => dismissModal('surah')}
-                  aria-label="Close surah selector"
+                  aria-label={t.close}
                 >
                   <IonIcon icon={close} />
                 </button>
@@ -546,27 +555,27 @@ function App() {
                 <input
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search surah by name or number"
-                  aria-label="Search surah"
+                  placeholder={t.searchSurahPlaceholder}
+                  aria-label={t.selectSurah}
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     className="search-clear-btn"
                     onClick={() => setSearchQuery('')}
-                    aria-label="Clear search"
+                    aria-label={t.clearSearch}
                   >
                     <IonIcon icon={close} />
                   </button>
                 )}
               </label>
 
-              {/* Bookmarks Row (When enabled) */}
+              {/* Bookmarks Row (When enabled) with Heart icon */}
               {enableBookmarks && !searchQuery && (
                 <div className="selector-quick-section bookmark-section">
                   <div className="section-header-row">
                     <div className="section-subtitle">
-                      <IonIcon icon={bookmark} /> Bookmarked
+                      <IonIcon icon={heart} className="gold-heart" /> {t.bookmarked}
                     </div>
                     <button
                       type="button"
@@ -574,14 +583,14 @@ function App() {
                       onClick={() => setIsEditingBookmarks((v) => !v)}
                     >
                       <IonIcon icon={isEditingBookmarks ? checkmarkCircle : createOutline} />
-                      <span>{isEditingBookmarks ? 'Done' : 'Edit'}</span>
+                      <span>{isEditingBookmarks ? t.done : t.edit}</span>
                     </button>
                   </div>
 
                   <div className="quick-chips-row">
                     {bookmarkedSurahs.length === 0 ? (
                       <span className="empty-hint">
-                        {isEditingBookmarks ? 'Tap stars below to bookmark surahs' : 'No bookmarks yet. Tap Edit to add.'}
+                        {isEditingBookmarks ? t.tapToBookmarkHint : t.noBookmarksYet}
                       </span>
                     ) : (
                       bookmarkedSurahs.map((surahNum) => {
@@ -600,8 +609,8 @@ function App() {
                                 }
                               }}
                             >
-                              <IonIcon icon={star} className="recent-chip-play gold-star" />
-                              <span className="recent-chip-title">{itemSurah.nameTransliteration}</span>
+                              <IonIcon icon={heart} className="recent-chip-play gold-heart" />
+                              <span className="recent-chip-title">{language === 'ar' ? itemSurah.nameArabic : itemSurah.nameTransliteration}</span>
                               <span className="recent-chip-arabic">{itemSurah.nameArabic}</span>
                               {isEditingBookmarks && (
                                 <IonIcon icon={close} className="chip-remove-icon" />
@@ -620,7 +629,7 @@ function App() {
                 <div className="selector-quick-section recently-played-section">
                   <div className="section-header-row">
                     <div className="section-subtitle">
-                      <IonIcon icon={bookmarkOutline} /> Recently Played
+                      <IonIcon icon={bookmarkOutline} /> {t.recentlyPlayed}
                     </div>
                   </div>
                   <div className="quick-chips-row">
@@ -638,7 +647,7 @@ function App() {
                         >
                           <IonIcon icon={play} className="recent-chip-play" />
                           <span className="recent-chip-title">
-                            {itemSurah.nameTransliteration} {item.ayah}
+                            {language === 'ar' ? itemSurah.nameArabic : itemSurah.nameTransliteration} {toArabicNumerals(item.ayah)}
                           </span>
                           <span className="recent-chip-arabic">{itemSurah.nameArabic}</span>
                         </button>
@@ -648,7 +657,7 @@ function App() {
                 </div>
               )}
 
-              {/* Surah List Grid */}
+              {/* Surah List Grid - Heart icons ONLY shown in Edit mode */}
               <div className="surah-grid">
                 {filteredSurahs.map((surahItem) => {
                   const isBookmarked = bookmarkedSurahs.includes(surahItem.number);
@@ -662,24 +671,24 @@ function App() {
                         <span className="surah-index-number">{toArabicNumerals(surahItem.number).padStart(3, '٠')}</span>
                         <span className="surah-option-copy">
                           <strong>{surahItem.nameArabic}</strong>
-                          <small>{surahItem.nameTransliteration} · Juz&apos; {toArabicNumerals(getSurahJuzNumber(surahItem.number))}</small>
+                          <small>{surahItem.nameTransliteration} · {t.juz} {toArabicNumerals(getSurahJuzNumber(surahItem.number))}</small>
                         </span>
-                        <span className="surah-option-count">{surahItem.totalAyahs} ayahs</span>
+                        <span className="surah-option-count">{surahItem.totalAyahs} {t.ayahsCount}</span>
                       </button>
 
-                      {/* Bookmark toggle star in list when bookmarks enabled */}
-                      {enableBookmarks && (
+                      {/* Heart bookmark button ONLY shown when edit mode is active */}
+                      {enableBookmarks && isEditingBookmarks && (
                         <button
                           type="button"
-                          className={`surah-star-btn ${isBookmarked ? 'is-bookmarked' : ''}`}
+                          className={`surah-heart-btn ${isBookmarked ? 'is-bookmarked' : ''}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleToggleBookmark(surahItem.number);
                           }}
-                          aria-label={isBookmarked ? `Remove ${surahItem.nameTransliteration} from bookmarks` : `Bookmark ${surahItem.nameTransliteration}`}
+                          aria-label={isBookmarked ? `Unbookmark ${surahItem.nameTransliteration}` : `Bookmark ${surahItem.nameTransliteration}`}
                           title={isBookmarked ? 'Bookmarked' : 'Bookmark surah'}
                         >
-                          <IonIcon icon={isBookmarked ? star : starOutline} />
+                          <IonIcon icon={isBookmarked ? heart : heartOutline} />
                         </button>
                       )}
                     </div>
@@ -699,29 +708,56 @@ function App() {
             aria-labelledby="settings-modal-title"
             onClick={() => dismissModal('settings')}
           >
-            <div className="modal-surface settings-surface driving-settings" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-surface settings-surface driving-settings" dir={language === 'ar' ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
               <div className="modal-heading">
                 <div>
-                  <span className="eyebrow">Quick Preferences</span>
-                  <h2 id="settings-modal-title">Settings</h2>
+                  <span className="eyebrow">{t.quickPreferences}</span>
+                  <h2 id="settings-modal-title">{t.settingsTitle}</h2>
                 </div>
                 <button
                   className="icon-button"
                   type="button"
                   onClick={() => dismissModal('settings')}
-                  aria-label="Close settings"
+                  aria-label={t.close}
                 >
                   <IonIcon icon={close} />
                 </button>
               </div>
 
               <div className="settings-scroll-body">
-                {/* 1. Reciter Card (Big & Clear) */}
+                {/* 1. Language Setting */}
                 <div className="driving-section">
-                  <span className="driving-section-title">Reciter</span>
+                  <div className="driving-section-header">
+                    <span className="driving-section-title">
+                      <IonIcon icon={globeOutline} /> {t.language}
+                    </span>
+                  </div>
+                  <div className="driving-pills-row">
+                    <button
+                      type="button"
+                      className={`driving-pill-btn ${language === 'en' ? 'selected' : ''}`}
+                      onClick={() => setLanguage('en')}
+                    >
+                      {language === 'en' && <IonIcon icon={checkmarkCircle} />}
+                      {t.english}
+                    </button>
+                    <button
+                      type="button"
+                      className={`driving-pill-btn ${language === 'ar' ? 'selected' : ''}`}
+                      onClick={() => setLanguage('ar')}
+                    >
+                      {language === 'ar' && <IonIcon icon={checkmarkCircle} />}
+                      {t.arabic}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. Reciter Card (Big & Clear) */}
+                <div className="driving-section">
+                  <span className="driving-section-title">{t.reciter}</span>
                   <div className="driving-reciter-card">
                     <div className="driving-reciter-text">
-                      <strong>{activeReciter.name}</strong>
+                      <strong>{language === 'ar' ? activeReciter.nameArabic : activeReciter.name}</strong>
                       <span>{activeReciter.style} · {activeReciter.nameArabic}</span>
                     </div>
                     <button
@@ -729,18 +765,18 @@ function App() {
                       className="reciter-btn activate-btn"
                       onClick={openReciterSelector}
                     >
-                      Change
+                      {t.change}
                     </button>
                   </div>
                 </div>
 
-                {/* 2. Player Preferences */}
+                {/* 3. Player Preferences */}
                 <div className="driving-section">
-                  <span className="driving-section-title">Player</span>
+                  <span className="driving-section-title">{t.player}</span>
                   
                   {/* Pin Player */}
                   <div className="driving-row">
-                    <span className="driving-row-label">Pinned Controls</span>
+                    <span className="driving-row-label">{t.pinnedControls}</span>
                     <button
                       className={`toggle ${pinned ? 'on' : ''}`}
                       type="button"
@@ -753,7 +789,7 @@ function App() {
 
                   {/* Navigation Chevrons */}
                   <div className="driving-row">
-                    <span className="driving-row-label">Previous / Next Buttons</span>
+                    <span className="driving-row-label">{t.previousNextButtons}</span>
                     <button
                       className={`toggle ${showPrevNext ? 'on' : ''}`}
                       type="button"
@@ -767,7 +803,7 @@ function App() {
                   {/* Swap Button Actions */}
                   {showPrevNext && (
                     <div className="driving-row">
-                      <span className="driving-row-label">Swap Button Directions (RTL)</span>
+                      <span className="driving-row-label">{t.swapButtonDirections}</span>
                       <button
                         className={`toggle ${swapPrevNext ? 'on' : ''}`}
                         type="button"
@@ -780,10 +816,10 @@ function App() {
                   )}
                 </div>
 
-                {/* 3. Sleep / Stop Timer */}
+                {/* 4. Sleep / Stop Timer */}
                 <div className="driving-section">
                   <div className="driving-section-header">
-                    <span className="driving-section-title">Sleep Timer</span>
+                    <span className="driving-section-title">{t.sleepTimer}</span>
                     {sleepTimerRemainingSec && (
                       <span className="driving-timer-countdown">
                         <IonIcon icon={timeOutline} /> {formatTimerRemaining(sleepTimerRemainingSec)}
@@ -792,12 +828,12 @@ function App() {
                   </div>
                   <div className="driving-pills-row">
                     {[
-                      { id: 'off', label: 'Off' },
-                      { id: '5min', label: '5 min' },
-                      { id: '15min', label: '15 min' },
-                      { id: '30min', label: '30 min' },
-                      { id: 'end_of_ayah', label: 'End of Ayah' },
-                      { id: 'end_of_surah', label: 'End of Surah' },
+                      { id: 'off', label: t.timerOff },
+                      { id: '5min', label: t.timer5min },
+                      { id: '15min', label: t.timer15min },
+                      { id: '30min', label: t.timer30min },
+                      { id: 'end_of_ayah', label: t.timerEndOfAyah },
+                      { id: 'end_of_surah', label: t.timerEndOfSurah },
                     ].map((timer) => (
                       <button
                         key={timer.id}
@@ -812,13 +848,13 @@ function App() {
                   </div>
                 </div>
 
-                {/* 4. Reading & Font Size Options */}
+                {/* 5. Reading & Font Size Options */}
                 <div className="driving-section">
-                  <span className="driving-section-title">Reading</span>
+                  <span className="driving-section-title">{t.reading}</span>
 
                   {/* Show Recently Played (Default OFF) */}
                   <div className="driving-row">
-                    <span className="driving-row-label">Show Recently Played</span>
+                    <span className="driving-row-label">{t.showRecentlyPlayed}</span>
                     <button
                       className={`toggle ${showRecentlyPlayed ? 'on' : ''}`}
                       type="button"
@@ -831,7 +867,7 @@ function App() {
 
                   {/* Enable Bookmarks (Default OFF) */}
                   <div className="driving-row">
-                    <span className="driving-row-label">Enable Bookmarks</span>
+                    <span className="driving-row-label">{t.enableBookmarks}</span>
                     <button
                       className={`toggle ${enableBookmarks ? 'on' : ''}`}
                       type="button"
@@ -844,7 +880,7 @@ function App() {
                   
                   {/* Auto-scroll */}
                   <div className="driving-row">
-                    <span className="driving-row-label">Auto-scroll</span>
+                    <span className="driving-row-label">{t.autoScroll}</span>
                     <button
                       className={`toggle ${autoScroll ? 'on' : ''}`}
                       type="button"
@@ -858,7 +894,7 @@ function App() {
                   {/* Font Size Preset Options */}
                   <div className="driving-font-size-box">
                     <div className="driving-section-header">
-                      <span className="driving-row-label">Font Size ({textSize.toFixed(1)})</span>
+                      <span className="driving-row-label">{t.fontSize} ({textSize.toFixed(1)})</span>
                       <div className="stepper compact">
                         <button
                           type="button"
@@ -885,11 +921,21 @@ function App() {
                           className={`driving-pill-btn ${Math.abs(textSize - preset.size) < 0.1 ? 'selected' : ''}`}
                           onClick={() => setTextSize(preset.size)}
                         >
-                          {preset.label}
+                          {t[preset.labelKey as keyof typeof t] as string}
                         </button>
                       ))}
                     </div>
                   </div>
+                </div>
+
+                {/* 6. Subtle, Respectful Dedication to late father Ali Elmadani */}
+                <div className="father-dedication-card" dir="rtl">
+                  <span className="dedication-text">
+                    إهداء إلى والدِي الراحل علي المدني، رحمه الله
+                  </span>
+                  <span className="dedication-sub">
+                    رحمه الله رحمةً واسعة
+                  </span>
                 </div>
               </div>
             </div>
@@ -902,6 +948,8 @@ function App() {
           isClosing={closingModal === 'reciters'}
           activeReciterId={activeReciterId}
           isFirstStartup={isFirstStartup}
+          t={t}
+          language={language}
           onClose={() => dismissModal('reciters')}
           onSelectReciter={(id) => {
             void handleSelectReciter(id);
