@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
@@ -91,7 +92,7 @@ class QuranPlaybackService : MediaSessionService() {
             return
         }
 
-        val mediaItem = resolveMediaItem(surah, mediaId)
+        val mediaItem = resolveMediaItem(surah, ayah, mediaId)
         if (mediaItem == null) {
             emitState()
             return
@@ -104,19 +105,35 @@ class QuranPlaybackService : MediaSessionService() {
         emitState()
     }
 
-    private fun resolveMediaItem(surah: Int, mediaId: String): MediaItem? {
+    private fun getReciterUrl(reciterId: String, surah: numberInt): String {
+        val padded = String.format(Locale.US, "%03d", surah)
+        return when (reciterId) {
+            "mishari-alafasy" -> "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/$padded.mp3"
+            "mahmoud-al-husary" -> "https://download.quranicaudio.com/quran/mahmood_khaleel_al-husaree_iza3a/$padded.mp3"
+            "abdul-basit-murattal" -> "https://download.quranicaudio.com/quran/abdul_basit_murattal/$padded.mp3"
+            else -> "https://server10.mp3quran.net/bader/Rewayat-Hafs-A-n-Assem/$padded.mp3"
+        }
+    }
+
+    private fun resolveMediaItem(surah: Int, ayah: Int, mediaId: String): MediaItem? {
         val padded = String.format(Locale.US, "%03d.mp3", surah)
+        val metadata = MediaMetadata.Builder()
+            .setTitle("Surah $surah — Ayah $ayah")
+            .setArtist(activeReciterId)
+            .setAlbumTitle("The Holy Quran — القرآن الكريم")
+            .build()
         
-        // Check internal filesDir
+        // 1. Check internal filesDir
         val internalFile = File(filesDir, "reciters/$activeReciterId/$padded")
         if (internalFile.exists() && internalFile.length() > 0) {
             return MediaItem.Builder()
                 .setUri(Uri.fromFile(internalFile))
                 .setMediaId(mediaId)
+                .setMediaMetadata(metadata)
                 .build()
         }
 
-        // Check external files dir
+        // 2. Check external files dir
         val externalDir = getExternalFilesDir(null)
         if (externalDir != null) {
             val externalFile = File(externalDir, "reciters/$activeReciterId/$padded")
@@ -124,15 +141,17 @@ class QuranPlaybackService : MediaSessionService() {
                 return MediaItem.Builder()
                     .setUri(Uri.fromFile(externalFile))
                     .setMediaId(mediaId)
+                    .setMediaMetadata(metadata)
                     .build()
             }
         }
 
-        // Check assets fallback
-        val assetPath = String.format(Locale.US, "asset:///public/assets/audio/%s/%03d.mp3", activeReciterId, surah)
+        // 3. Fallback to remote streaming URL
+        val remoteUrl = getReciterUrl(activeReciterId, surah)
         return MediaItem.Builder()
-            .setUri(assetPath)
+            .setUri(Uri.parse(remoteUrl))
             .setMediaId(mediaId)
+            .setMediaMetadata(metadata)
             .build()
     }
 
@@ -230,4 +249,5 @@ class QuranPlaybackService : MediaSessionService() {
     }
 }
 
+typealias numberInt = Int
 data class AyahRange(val startMs: Long, val endMs: Long)

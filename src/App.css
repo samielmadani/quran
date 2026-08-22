@@ -51,19 +51,287 @@
   min-height: 0;
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: clamp(1.5rem, 4vh, 3.2rem) clamp(1.25rem, 5vw, 5rem) 7.5rem;
+  padding: clamp(1rem, 3vh, 2.5rem) clamp(1.25rem, 5vw, 5rem) 7.5rem;
   scrollbar-color: rgba(215, 174, 105, 0.35) transparent;
   scrollbar-width: thin;
 }
 
-.basmala {
-  padding: 0.4rem 0 1.8rem;
+/* ==========================================================================
+   Continue Listening Hero Banner
+   ========================================================================== */
+.continue-listening-card {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: min(100%, 780px);
+  margin: 0.75rem auto 0.5rem;
+  padding: 0.9rem 1.15rem;
+  border: 1px solid rgba(215, 174, 105, 0.38);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(28, 34, 42, 0.96), rgba(16, 20, 26, 0.94));
+  backdrop-filter: blur(18px);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(215, 174, 105, 0.15);
+  animation: slide-down 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.continue-listening-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.continue-eyebrow {
+  color: var(--gold);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+}
+
+.continue-surah-title {
   color: var(--text);
-  direction: rtl;
-  font-family: 'Amiri', serif;
-  font-size: clamp(3rem, 5vw, 4.8rem);
-  line-height: 1.2;
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.continue-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+}
+
+.continue-timestamp {
+  color: var(--gold);
+  font-weight: 700;
+  font-family: 'DM Sans', monospace;
+}
+
+.continue-dot {
+  color: var(--muted);
+}
+
+.continue-reciter {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.continue-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.continue-resume-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.15rem;
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  background: var(--gold);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 16px rgba(215, 174, 105, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.continue-resume-btn:hover {
+  background: #e2be7c;
+  transform: translateY(-1px);
+}
+
+.continue-resume-btn:active {
+  transform: translateY(1px);
+}
+
+.continue-dismiss-btn {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.continue-dismiss-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   Surah Header Banner Component (At Top of Each Surah)
+   ========================================================================== */
+.surah-header-banner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 780px);
+  margin: 0.5rem auto 1.75rem;
+  padding: 1.25rem 1.5rem 1.1rem;
+  border: 1px solid rgba(215, 174, 105, 0.28);
+  border-radius: 20px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(35, 42, 52, 0.75), rgba(16, 20, 26, 0.85));
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 0 20px rgba(215, 174, 105, 0.04);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.surah-header-banner:hover {
+  border-color: rgba(215, 174, 105, 0.5);
+  transform: translateY(-1px);
+}
+
+.surah-header-ornament-top,
+.surah-header-ornament-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+.ornament-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(215, 174, 105, 0.5), transparent);
+}
+
+.ornament-gem {
+  color: var(--gold);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.ornament-diamond {
+  color: var(--gold);
+  font-size: 0.65rem;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.surah-header-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0.4rem 0 0.5rem;
   text-align: center;
+}
+
+.surah-header-title-arabic {
+  margin: 0;
+  color: var(--gold);
+  font-family: 'Amiri', serif;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.2;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 18px rgba(215, 174, 105, 0.2);
+}
+
+.surah-header-sub {
+  margin-top: 0.2rem;
+}
+
+.surah-transliteration {
+  color: var(--text);
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.surah-header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-bottom: 0.6rem;
+}
+
+.surah-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 500;
+}
+
+.surah-badge.revelation-badge {
+  border-color: rgba(215, 174, 105, 0.35);
+  background: var(--gold-soft);
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Bismillah Header & Quran Text Flow
+   ========================================================================== */
+.basmala-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.basmala-ayah {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 0.3rem 1.2rem;
+  text-align: center;
+  border-radius: 14px;
+}
+
+.basmala-calligraphy {
+  font-family: 'Amiri', serif;
+  font-size: clamp(2rem, 5.5vw, 3.2rem);
+  line-height: 1.4;
+  color: var(--text);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), 0 0 20px rgba(215, 174, 105, 0.15);
 }
 
 .quran-flow {
@@ -73,6 +341,8 @@
   line-height: 2.3;
   text-align: justify;
   text-align-last: center;
+  width: min(100%, 780px);
+  margin: 0 auto;
 }
 
 .ayah {
@@ -92,13 +362,6 @@
   box-decoration-break: clone;
 }
 
-.basmala-ayah {
-  display: block;
-  margin-bottom: 0.45em;
-  padding: 0.15em 0;
-  text-align: center;
-}
-
 .ayah:hover {
   background: rgba(255, 255, 255, 0.035);
 }
@@ -106,7 +369,7 @@
 .ayah.active {
   border-color: rgba(215, 174, 105, 0.35);
   background: var(--gold-soft);
-  box-shadow: 0 0 24px rgba(215, 174, 105, 0.09);
+  box-shadow: 0 0 24px rgba(215, 174, 105, 0.12);
 }
 
 .ayah-text {
@@ -138,7 +401,7 @@
 }
 
 /* ==========================================================================
-   Full Player & Bottom Footer (Responsive Single-Line Toolbar)
+   Full Player & Bottom Footer (Strictly Centered CSS Grid)
    ========================================================================== */
 .app-footer {
   position: relative;
@@ -161,52 +424,62 @@
 }
 
 .audio-progress {
+  position: relative;
   width: 100%;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.08);
+  height: 5px;
+  background: rgba(255, 255, 255, 0.09);
   overflow: hidden;
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+
+.audio-progress:hover {
+  height: 8px;
 }
 
 .audio-progress-fill {
   height: 100%;
   background: var(--gold);
   box-shadow: 0 0 12px var(--gold-glow);
-  transition: width 0.2s linear;
+  pointer-events: none;
+  transition: width 0.1s linear;
 }
 
+/* CSS Grid with 1fr auto 1fr guarantees absolute center of transport group */
 .footer-toolbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.65rem;
   padding: 0.65rem clamp(0.75rem, 3vw, 2.5rem);
   min-height: 74px;
+  width: 100%;
 }
 
 .toolbar-group {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .toolbar-left {
-  flex: 0 0 auto;
+  justify-self: start;
 }
 
 .toolbar-center {
+  justify-self: center;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  flex: 0 0 auto;
 }
 
 .toolbar-right {
+  justify-self: end;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
-  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -219,7 +492,12 @@
 .stepper button,
 .reciter-btn,
 .mini-play-btn,
-.mini-expand-btn {
+.mini-expand-btn,
+.recent-chip,
+.reciter-live-chip,
+.driving-pill-btn,
+.edit-toggle-btn,
+.circular-download-btn {
   border: 0;
   color: inherit;
   cursor: pointer;
@@ -238,6 +516,7 @@
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
   font-size: 1.25rem;
+  position: relative;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
@@ -252,10 +531,105 @@
   transform: translateY(1px);
 }
 
-.pin-button.pinned {
+/* Circular Download Progress Indicator in Footer */
+.circular-download-btn {
+  position: relative;
+  display: inline-grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  place-items: center;
+  border: 1px solid rgba(215, 174, 105, 0.4);
+  border-radius: 14px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.circular-download-btn:hover {
+  transform: scale(1.05);
   border-color: var(--gold);
-  background: var(--gold);
-  color: var(--ink);
+}
+
+.progress-ring {
+  display: block;
+}
+
+.progress-ring-fill {
+  transition: stroke-dashoffset 0.25s ease;
+}
+
+.progress-ring-text {
+  position: absolute;
+  font-size: 0.62rem;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--gold);
+}
+
+/* Current Reciter + Live Audio Timestamp Chip in Footer */
+.reciter-live-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  max-width: 220px;
+  height: 48px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.reciter-live-chip:hover {
+  border-color: rgba(215, 174, 105, 0.45);
+  background: var(--gold-soft);
+}
+
+.reciter-chip-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reciter-chip-time {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gold);
+  font-family: 'DM Sans', monospace;
+  letter-spacing: -0.02em;
+  background: rgba(215, 174, 105, 0.12);
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+}
+
+/* Autoplay / Repeat Single-Button */
+.repeat-cycle-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+}
+
+.repeat-cycle-btn.repeat-active {
+  border-color: rgba(215, 174, 105, 0.6);
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.repeat-cycle-badge {
+  font-size: 0.52rem;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
 }
 
 .transport-button {
@@ -411,7 +785,7 @@
   height: 100%;
   background: var(--gold);
   box-shadow: 0 0 8px var(--gold-glow);
-  transition: width 0.2s linear;
+  transition: width 0.1s linear;
 }
 
 .mini-player-body {
@@ -476,6 +850,13 @@
 
 .mini-player-ayah {
   color: var(--muted);
+}
+
+.mini-player-time {
+  color: var(--gold);
+  font-weight: 700;
+  font-family: 'DM Sans', monospace;
+  margin-left: 0.25rem;
 }
 
 .mini-player-expand-symbol {
@@ -586,7 +967,9 @@
   font-weight: 500;
 }
 
+/* Search Field (Surah & Reciter Selector) */
 .search-field {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.8rem;
@@ -613,6 +996,138 @@
   color: #717981;
 }
 
+.search-clear-btn {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.search-clear-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Bookmarks & Recently Played Sections in Surah Selector */
+.selector-quick-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gold);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.edit-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s ease;
+}
+
+.edit-toggle-btn:hover,
+.edit-toggle-btn.editing {
+  border-color: var(--gold);
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.quick-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+}
+
+.empty-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-style: italic;
+}
+
+.chip-wrapper {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.recent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid rgba(215, 174, 105, 0.35);
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.recent-chip:hover {
+  background: rgba(215, 174, 105, 0.22);
+  border-color: var(--gold);
+}
+
+.bookmark-chip .gold-star {
+  color: var(--gold);
+  font-size: 0.95rem;
+}
+
+.chip-remove-icon {
+  color: var(--red);
+  font-size: 0.9rem;
+  margin-left: 0.2rem;
+}
+
+.recent-chip-play {
+  color: var(--gold);
+  font-size: 0.9rem;
+}
+
+.recent-chip-arabic {
+  font-family: 'Amiri', serif;
+  font-size: 0.95rem;
+  color: var(--gold);
+  margin-left: 0.2rem;
+}
+
 .surah-grid {
   display: grid;
   direction: rtl;
@@ -624,11 +1139,19 @@
   scrollbar-width: thin;
 }
 
+.surah-option-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
 .surah-option {
   display: flex;
   align-items: center;
   direction: ltr;
   min-height: 68px;
+  width: 100%;
   gap: 0.8rem;
   padding: 0.75rem 0.95rem;
   border: 1px solid var(--line);
@@ -642,6 +1165,34 @@
 .surah-option.selected {
   border-color: rgba(215, 174, 105, 0.5);
   background: var(--gold-soft);
+}
+
+.surah-star-btn {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--muted);
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.15s ease;
+  z-index: 2;
+}
+
+.surah-star-btn:hover {
+  transform: translateY(-50%) scale(1.15);
+  color: var(--gold);
+}
+
+.surah-star-btn.is-bookmarked {
+  color: var(--gold);
 }
 
 .surah-index-number {
@@ -681,52 +1232,160 @@
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
 }
 
-/* Settings modal surface */
-.settings-surface {
-  width: min(100%, 480px);
-  height: auto;
-  max-height: min(440px, 80vh);
+/* ==========================================================================
+   Driving-Friendly Quick Glance Settings Modal
+   ========================================================================== */
+.settings-surface.driving-settings {
+  width: min(100%, 540px);
+  height: min(85vh, 660px);
 }
 
-.setting-row {
+.settings-scroll-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+  scrollbar-color: rgba(215, 174, 105, 0.35) transparent;
+  scrollbar-width: thin;
+}
+
+.driving-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.driving-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.driving-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.driving-timer-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold);
+  font-family: 'DM Sans', monospace;
+  background: var(--gold-soft);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+.driving-reciter-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 76px;
+}
+
+.driving-reciter-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.driving-reciter-text strong {
+  font-size: 1.1rem;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.driving-reciter-text span {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.driving-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 48px;
+}
+
+.driving-row-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.driving-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.driving-font-size-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-top: 0.5rem;
   border-top: 1px solid var(--line);
 }
 
-.setting-row div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+.font-pills-row {
+  gap: 0.4rem;
 }
 
-.setting-row strong {
-  font-size: 0.95rem;
-  font-weight: 600;
-  font-family: 'DM Sans', 'Segoe UI', sans-serif;
-}
-
-.setting-row small {
+.driving-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
   color: var(--muted);
-  font-size: 0.74rem;
-  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.driving-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+}
+
+.driving-pill-btn.selected {
+  border-color: var(--gold);
+  background: var(--gold-soft);
+  color: var(--gold);
+  font-weight: 700;
 }
 
 .toggle {
-  width: 54px;
-  height: 32px;
+  width: 56px;
+  height: 34px;
   padding: 3px;
   border-radius: 999px;
   background: #282e35;
+  flex-shrink: 0;
 }
 
 .toggle span {
   display: block;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: #8b9299;
   transition: transform 0.2s ease, background 0.2s ease;
@@ -747,23 +1406,41 @@
   gap: 0.65rem;
 }
 
+.stepper.compact {
+  gap: 0.4rem;
+}
+
 .stepper button {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text);
+  font-size: 1.1rem;
+}
+
+.stepper.compact button {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  font-size: 0.95rem;
 }
 
 .stepper span {
-  min-width: 2.2rem;
+  min-width: 2.4rem;
   color: var(--gold);
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
   text-align: center;
+}
+
+.stepper.compact span {
+  min-width: 1.8rem;
+  font-size: 0.88rem;
 }
 
 /* ==========================================================================
@@ -824,12 +1501,19 @@
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.025);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+}
+
+.reciter-card:hover {
+  border-color: rgba(215, 174, 105, 0.4);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .reciter-card.active {
-  border-color: rgba(215, 174, 105, 0.55);
-  background: rgba(215, 174, 105, 0.06);
+  border-color: rgba(215, 174, 105, 0.65);
+  background: rgba(215, 174, 105, 0.08);
+  box-shadow: 0 0 20px rgba(215, 174, 105, 0.06);
 }
 
 .reciter-card.downloading {
@@ -1050,50 +1734,75 @@
    ========================================================================== */
 @media (max-width: 640px) {
   .footer-toolbar {
-    padding: 0.5rem 0.65rem;
-    gap: 0.35rem;
+    padding: 0.45rem 0.55rem;
+    gap: 0.3rem;
     min-height: 68px;
   }
 
   .toolbar-group {
-    gap: 0.35rem;
+    gap: 0.3rem;
   }
 
   .icon-button,
-  .transport-button {
-    width: 42px;
-    height: 42px;
-    flex-basis: 42px;
-    border-radius: 12px;
-    font-size: 1.15rem;
-  }
-
-  .play-button {
-    width: 52px;
-    height: 52px;
-    font-size: 1.4rem;
-  }
-
-  .surah-heading-btn {
-    padding: 0.25rem 0.4rem;
-    max-width: 140px;
-  }
-
-  .surah-heading-arabic {
+  .transport-button,
+  .circular-download-btn {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+    border-radius: 11px;
     font-size: 1.1rem;
   }
 
+  .play-button {
+    width: 50px;
+    height: 50px;
+    font-size: 1.35rem;
+  }
+
+  .reciter-live-chip {
+    padding: 0.35rem 0.55rem;
+    max-width: 130px;
+    height: 40px;
+    gap: 0.35rem;
+  }
+
+  .reciter-chip-name {
+    font-size: 0.72rem;
+  }
+
+  .reciter-chip-time {
+    font-size: 0.72rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .surah-heading-btn {
+    padding: 0.2rem 0.35rem;
+    max-width: 120px;
+  }
+
+  .surah-heading-arabic {
+    font-size: 1.05rem;
+  }
+
   .surah-heading-latin {
-    font-size: 0.66rem;
+    font-size: 0.64rem;
   }
 
   .quran-reading {
-    padding: 1.25rem 0.85rem 6.5rem;
+    padding: 0.85rem 0.75rem 6.5rem;
   }
 
-  .basmala-ayah {
+  .surah-header-banner {
+    padding: 1rem 1rem 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .surah-header-title-arabic {
+    font-size: 1.85rem;
+  }
+
+  .basmala-calligraphy {
     font-size: clamp(1.6rem, 6vw, 2.2rem);
-    line-height: 1.3;
   }
 
   .surah-grid {
@@ -1107,11 +1816,5 @@
   .modal-surface {
     padding: 1.15rem;
     border-radius: 20px;
-  }
-}
-
-@media (orientation: portrait) {
-  .footer-toolbar {
-    justify-content: space-between;
   }
 }

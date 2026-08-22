@@ -1,6 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IonIcon } from '@ionic/react';
-import { checkmarkCircle, close, cloudDownloadOutline, trashOutline, pauseCircleOutline } from 'ionicons/icons';
+import {
+  checkmarkCircle,
+  close,
+  cloudDownloadOutline,
+  trashOutline,
+  pauseCircleOutline,
+  radioOutline,
+  searchOutline,
+} from 'ionicons/icons';
 import { RECITERS, type Reciter } from '../data/reciterRegistry';
 import { reciterStorage } from '../services/storage';
 import { reciterDownloadManager, type DownloadProgress } from '../services/reciterDownloadManager';
@@ -22,6 +30,7 @@ export function ReciterModal({
   onClose,
   onSelectReciter,
 }: ReciterModalProps) {
+  const [searchQuery, setSearchQuery] = useState('');
   const [downloadMap, setDownloadMap] = useState<Record<string, number[]>>({});
   const [downloadProgress, setDownloadProgress] = useState<DownloadProgress>(
     reciterDownloadManager.getProgress(),
@@ -51,19 +60,37 @@ export function ReciterModal({
     return unsubscribe;
   }, []);
 
+  const filteredReciters = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return RECITERS;
+    return RECITERS.filter((reciter) =>
+      [reciter.name, reciter.nameArabic, reciter.style, reciter.description || ''].some((val) =>
+        val.toLowerCase().includes(q),
+      ),
+    );
+  }, [searchQuery]);
+
   if (!isOpen) return null;
 
-  const handleStartDownload = async (reciter: Reciter) => {
+  const handleSelect = (reciterId: string) => {
+    setSearchQuery('');
+    onSelectReciter(reciterId);
+  };
+
+  const handleStartDownload = async (reciter: Reciter, event?: React.MouseEvent) => {
+    event?.stopPropagation();
     await reciterDownloadManager.startDownload(reciter);
     await refreshInstalledStatus();
   };
 
-  const handleCancelDownload = () => {
+  const handleCancelDownload = (event?: React.MouseEvent) => {
+    event?.stopPropagation();
     reciterDownloadManager.cancelDownload();
   };
 
-  const handleDelete = async (reciter: Reciter) => {
-    if (window.confirm(`Delete downloaded audio for ${reciter.name}?`)) {
+  const handleDelete = async (reciter: Reciter, event?: React.MouseEvent) => {
+    event?.stopPropagation();
+    if (window.confirm(`Delete downloaded offline audio for ${reciter.name}?`)) {
       if (reciterDownloadManager.isDownloadingReciter(reciter.id)) {
         reciterDownloadManager.cancelDownload();
       }
@@ -84,7 +111,7 @@ export function ReciterModal({
         <div className="modal-heading">
           <div>
             <span className="eyebrow">Audio & Recitations</span>
-            <h2 id="reciter-modal-title">Reciters</h2>
+            <h2 id="reciter-modal-title">Choose Reciter</h2>
           </div>
           {!isFirstStartup && (
             <button className="icon-button" type="button" onClick={onClose} aria-label="Close reciter modal">
@@ -97,14 +124,35 @@ export function ReciterModal({
           <div className="reciter-welcome-banner">
             <IonIcon icon={cloudDownloadOutline} className="welcome-banner-icon" />
             <div>
-              <strong>Welcome to Quran</strong>
-              <p>Download your preferred reciter below to enable offline Quran recitation.</p>
+              <strong>Select Your Preferred Reciter</strong>
+              <p>Choose any reciter to begin listening. You can stream instantly or download for offline playback.</p>
             </div>
           </div>
         )}
 
+        {/* Search input with clear X button (Identical to Surah selector) */}
+        <label className="search-field">
+          <IonIcon icon={searchOutline} />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search reciter by name or style"
+            aria-label="Search reciter"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="search-clear-btn"
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+            >
+              <IonIcon icon={close} />
+            </button>
+          )}
+        </label>
+
         <div className="reciter-list">
-          {RECITERS.map((reciter) => {
+          {filteredReciters.map((reciter) => {
             const downloadedSurahs = downloadMap[reciter.id] ?? [];
             const count = downloadedSurahs.length;
             const isFullyInstalled = count >= reciter.totalSurahs;
@@ -117,6 +165,14 @@ export function ReciterModal({
               <div
                 key={reciter.id}
                 className={`reciter-card ${isActive ? 'active' : ''} ${isCurrentlyDownloading ? 'downloading' : ''}`}
+                onClick={() => handleSelect(reciter.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleSelect(reciter.id);
+                  }
+                }}
               >
                 <div className="reciter-card-header">
                   <div className="reciter-names">
@@ -126,18 +182,30 @@ export function ReciterModal({
                   </div>
 
                   <div className="reciter-badges">
-                    {isActive && <span className="reciter-badge active-badge"><IonIcon icon={checkmarkCircle} /> Active</span>}
+                    {isActive && (
+                      <span className="reciter-badge active-badge">
+                        <IonIcon icon={checkmarkCircle} /> Active Reciter
+                      </span>
+                    )}
                     {isFullyInstalled && !isCurrentlyDownloading && (
-                      <span className="reciter-badge installed-badge">Installed ({count}/{reciter.totalSurahs})</span>
+                      <span className="reciter-badge installed-badge">
+                        Offline Ready ({count}/{reciter.totalSurahs})
+                      </span>
                     )}
                     {isPartiallyInstalled && !isCurrentlyDownloading && (
-                      <span className="reciter-badge partial-badge">Partial ({count}/{reciter.totalSurahs})</span>
+                      <span className="reciter-badge partial-badge">
+                        Offline ({count}/{reciter.totalSurahs})
+                      </span>
                     )}
                     {!isFullyInstalled && !isPartiallyInstalled && !isCurrentlyDownloading && (
-                      <span className="reciter-badge not-installed-badge">Not Installed</span>
+                      <span className="reciter-badge not-installed-badge">
+                        <IonIcon icon={radioOutline} /> Stream & Offline
+                      </span>
                     )}
                     {isCurrentlyDownloading && (
-                      <span className="reciter-badge downloading-badge">Downloading {downloadProgress.progressPercent}%</span>
+                      <span className="reciter-badge downloading-badge">
+                        Downloading {downloadProgress.progressPercent}%
+                      </span>
                     )}
                   </div>
                 </div>
@@ -147,7 +215,7 @@ export function ReciterModal({
                 )}
 
                 {isCurrentlyDownloading && (
-                  <div className="reciter-download-progress">
+                  <div className="reciter-download-progress" onClick={(e) => e.stopPropagation()}>
                     <div className="progress-info-row">
                       <span>Downloading Surah {downloadProgress.currentSurah} of {downloadProgress.totalSurahs}</span>
                       <span>{downloadProgress.downloadedCount}/{downloadProgress.totalSurahs} surahs ({downloadProgress.progressPercent}%)</span>
@@ -167,33 +235,31 @@ export function ReciterModal({
                   </div>
                 )}
 
-                <div className="reciter-actions">
-                  {/* Select / Set Active */}
-                  {isFullyInstalled && !isActive && (
+                <div className="reciter-actions" onClick={(e) => e.stopPropagation()}>
+                  {/* Select / Active State */}
+                  {!isActive ? (
                     <button
                       type="button"
                       className="reciter-btn activate-btn"
-                      onClick={() => onSelectReciter(reciter.id)}
+                      onClick={() => handleSelect(reciter.id)}
                     >
                       <IonIcon icon={checkmarkCircle} /> Select Reciter
                     </button>
-                  )}
-
-                  {isActive && isFullyInstalled && (
+                  ) : (
                     <button type="button" className="reciter-btn active-state-btn" disabled>
                       <IonIcon icon={checkmarkCircle} /> Currently Active
                     </button>
                   )}
 
-                  {/* Download button */}
+                  {/* Download button for offline listening */}
                   {!isFullyInstalled && !isCurrentlyDownloading && (
                     <button
                       type="button"
                       className="reciter-btn download-btn"
-                      onClick={() => handleStartDownload(reciter)}
+                      onClick={(e) => void handleStartDownload(reciter, e)}
                     >
                       <IonIcon icon={cloudDownloadOutline} />
-                      {count > 0 ? `Resume Download (${count}/${reciter.totalSurahs})` : 'Download Audio'}
+                      {count > 0 ? `Resume Download (${count}/${reciter.totalSurahs})` : 'Download Offline Audio'}
                     </button>
                   )}
 
@@ -202,7 +268,7 @@ export function ReciterModal({
                     <button
                       type="button"
                       className="reciter-btn cancel-btn"
-                      onClick={handleCancelDownload}
+                      onClick={(e) => handleCancelDownload(e)}
                     >
                       <IonIcon icon={pauseCircleOutline} /> Cancel Download
                     </button>
@@ -213,10 +279,10 @@ export function ReciterModal({
                     <button
                       type="button"
                       className="reciter-btn delete-btn"
-                      onClick={() => handleDelete(reciter)}
-                      title="Delete downloaded audio files"
+                      onClick={(e) => void handleDelete(reciter, e)}
+                      title="Delete downloaded offline audio files"
                     >
-                      <IonIcon icon={trashOutline} /> Delete
+                      <IonIcon icon={trashOutline} /> Delete Download
                     </button>
                   )}
                 </div>

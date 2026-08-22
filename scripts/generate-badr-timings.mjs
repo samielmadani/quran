@@ -3,7 +3,6 @@ import { dirname, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const sourceDirectory = resolve(root, 'data/badr-al-turki');
-const quranPath = resolve(root, 'node_modules/quran-json/dist/quran.json');
 const outputPath = resolve(root, 'src/data/badrAlTurkiTimings.ts');
 const nativeOutputPath = resolve(root, 'public/data/badrAlTurkiTimings.json');
 

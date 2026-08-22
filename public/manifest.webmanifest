@@ -1,13 +1,19 @@
 {
-  "name": "Quran Automotive",
+  "name": "The Holy Quran — القرآن الكريم",
   "short_name": "Quran",
-  "description": "Offline Quran reader and Badr Al-Turki recitation player for automotive head units.",
+  "description": "The Holy Quran reader and recitation player with offline reciters and automotive media controls.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0d1117",
-  "theme_color": "#0d1117",
+  "background_color": "#090b0e",
+  "theme_color": "#090b0e",
   "orientation": "any",
   "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
     {
       "src": "/favicon.png",
       "sizes": "512x512",

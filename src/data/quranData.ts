@@ -10,6 +10,7 @@ export type Surah = {
   nameArabic: string;
   nameTransliteration: string;
   englishName: string;
+  type: string;
   totalAyahs: number;
   ayahs: Ayah[];
 };
@@ -33,6 +34,7 @@ export const quranDataset: QuranDataset = {
     nameArabic: surah.name,
     nameTransliteration: surah.transliteration,
     englishName: surah.transliteration,
+    type: surah.type || 'meccan',
     totalAyahs: surah.total_verses,
     ayahs: surah.verses.map((ayah) => ({
       number: ayah.id,
