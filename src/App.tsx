@@ -36,11 +36,28 @@ function App() {
   const [pinned, setPinned] = useState(false);
   const [closingModal, setClosingModal] = useState<'surah' | 'settings' | null>(null);
   const hideControlsTimer = useRef<number | undefined>(undefined);
+  const swipeStartY = useRef<number | null>(null);
 
   const scheduleControlsHide = () => {
     window.clearTimeout(hideControlsTimer.current);
     if (isPlaying) {
       hideControlsTimer.current = window.setTimeout(() => setControlsVisible(false), 3200);
+    }
+  };
+
+  const handleShellPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'touch') {
+      swipeStartY.current = event.clientY;
+    }
+  };
+
+  const handleShellPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'touch' && swipeStartY.current !== null) {
+      if (swipeStartY.current - event.clientY > 40) {
+        setControlsVisible(true);
+        scheduleControlsHide();
+      }
+      swipeStartY.current = null;
     }
   };
 
@@ -88,7 +105,7 @@ function App() {
 
   return (
     <IonApp>
-      <div className={`quran-shell ${controlsVisible || pinned ? '' : 'controls-hidden'}`} onPointerDown={() => { setControlsVisible(true); scheduleControlsHide(); }}>
+      <div className={`quran-shell ${controlsVisible || pinned ? '' : 'controls-hidden'}`} onPointerDown={handleShellPointerDown} onPointerUp={handleShellPointerUp}>
         <header className="app-header">
           <button className={`icon-button pin-button ${pinned ? 'pinned' : ''}`} type="button" onClick={(event) => { event.stopPropagation(); setPinned((value) => !value); setControlsVisible(true); }} aria-label={pinned ? 'Unpin controls' : 'Pin controls'} aria-pressed={pinned}><IonIcon icon={pinOutline} /></button>
           <button className="icon-button" type="button" onClick={openSettings} aria-label="Open settings"><IonIcon icon={settingsOutline} /></button>

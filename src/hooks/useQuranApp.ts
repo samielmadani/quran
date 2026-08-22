@@ -47,7 +47,9 @@ export function useQuranApp() {
       return;
     }
 
-    const targetTop = target.getBoundingClientRect().top - reading.getBoundingClientRect().top + reading.scrollTop - (reading.clientHeight - target.offsetHeight) / 2;
+    const targetTop = currentAyah <= 1
+      ? 0
+      : target.getBoundingClientRect().top - reading.getBoundingClientRect().top + reading.scrollTop - (reading.clientHeight - target.offsetHeight) / 2;
     reading.scrollTo({
       top: Math.max(0, targetTop),
       behavior: 'smooth',

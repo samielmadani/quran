@@ -23,4 +23,31 @@ dist-ssr
 *.sln
 *.sw?
 
-android
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+*.hprof
+
+# Capacitor generated (synced from web build via `npx cap sync`)
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/app/capacitor.build.gradle
+android/capacitor.settings.gradle
+android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+
+# Signing
+*.keystore
+*.jks
+
+# Build artifacts
+*.apk
+*.ap_
+*.dex
+*.class
+
+# Stray output file
+untracked_files.txt
