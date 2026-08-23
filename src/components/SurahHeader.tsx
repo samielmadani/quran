@@ -4,18 +4,29 @@ import { getSurahJuzNumber } from '../data/juzData';
 interface SurahHeaderProps {
   surah: Surah;
   onOpenSurahPicker?: () => void;
+  onLongPressStart?: () => void;
+  onLongPressEnd?: () => void;
+  onSurahClick?: () => void;
 }
 
 const toArabicNumerals = (value: number) =>
   String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
 
-export function SurahHeader({ surah, onOpenSurahPicker }: SurahHeaderProps) {
+export function SurahHeader({ surah, onOpenSurahPicker, onLongPressStart, onLongPressEnd, onSurahClick }: SurahHeaderProps) {
   const juz = getSurahJuzNumber(surah.number);
   const isMeccan = surah.type?.toLowerCase().includes('mecc') || surah.type?.toLowerCase().includes('makk');
   const revelationLabel = isMeccan ? 'Meccan • مكية' : 'Medinan • مدنية';
 
   return (
-    <header className="surah-header-banner" role="banner" onClick={onOpenSurahPicker}>
+    <header
+      className="surah-header-banner"
+      role="banner"
+      onClick={onSurahClick ?? onOpenSurahPicker}
+      onPointerDown={onLongPressStart}
+      onPointerUp={onLongPressEnd}
+      onPointerCancel={onLongPressEnd}
+      onContextMenu={(event) => event.preventDefault()}
+    >
       <div className="surah-header-ornament-top">
         <span className="ornament-line" />
         <span className="ornament-gem">۞</span>

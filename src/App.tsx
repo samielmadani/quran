@@ -388,7 +388,13 @@ function App() {
 
             <div className="quran-reading" ref={viewRef}>
               {/* Surah Header Card at Top of Each Surah */}
-              <SurahHeader surah={surah} onOpenSurahPicker={openSurahSelector} />
+              <SurahHeader
+                surah={surah}
+                onOpenSurahPicker={openSurahSelector}
+                onLongPressStart={() => handleSurahPointerDown(surah.number)}
+                onLongPressEnd={handleAyahPointerUp}
+                onSurahClick={() => handleSurahClick(surah.number)}
+              />
 
               <div className="quran-flow" dir="rtl" style={{ fontSize: `${textSize}rem` }}>
                 {/* Bismillah Header (Except Surah 9 At-Tawbah) */}
