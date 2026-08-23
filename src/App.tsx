@@ -215,6 +215,14 @@ function App() {
     dismissModal('surah', () => handleSelectAyah(surahNumber, firstAyahForSurah(surahNumber)));
   };
 
+  const handleSurahHeaderClick = () => {
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      return;
+    }
+    openSurahSelector();
+  };
+
   const scheduleControlsHide = useCallback(() => {
     window.clearTimeout(hideControlsTimer.current);
     if (isPlaying && !pinned) {
@@ -393,7 +401,7 @@ function App() {
                 onOpenSurahPicker={openSurahSelector}
                 onLongPressStart={() => handleSurahPointerDown(surah.number)}
                 onLongPressEnd={handleAyahPointerUp}
-                onSurahClick={() => handleSurahClick(surah.number)}
+                onSurahClick={handleSurahHeaderClick}
               />
 
               <div className="quran-flow" dir="rtl" style={{ fontSize: `${textSize}rem` }}>
