@@ -111,6 +111,16 @@ class QuranPlaybackService : MediaSessionService() {
             "mishari-alafasy" -> "https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/$surah.mp3"
             "mahmoud-al-husary" -> "https://download.quranicaudio.com/qdc/khalil_al_husary/murattal/$surah.mp3"
             "abdul-basit-murattal" -> "https://download.quranicaudio.com/qdc/abdul_baset/murattal/$surah.mp3"
+            "muhammad-siddiq-al-minshawi" -> "https://download.quranicaudio.com/qdc/siddiq_minshawi/murattal/$surah.mp3"
+            "maher-al-muaiqly" -> "https://server12.mp3quran.net/maher/$padded.mp3"
+            "yasser-al-dosari" -> "https://server11.mp3quran.net/yasser/$padded.mp3"
+            "saad-al-ghamdi" -> "https://server7.mp3quran.net/s_gmd/$padded.mp3"
+            "abu-bakr-al-shatri" -> "https://download.quranicaudio.com/qdc/abu_bakr_shatri/murattal/$surah.mp3"
+            "nasser-al-qatami" -> "https://server6.mp3quran.net/qtm/$padded.mp3"
+            "abdullah-awad-al-juhany" -> "https://server13.mp3quran.net/jhn/$padded.mp3"
+            "abdul-rahman-al-sudais" -> "https://download.quranicaudio.com/qdc/abdurrahmaan_as_sudais/murattal/$surah.mp3"
+            "fares-abbad" -> "https://server8.mp3quran.net/frs_a/$padded.mp3"
+            "ahmed-al-ajmi" -> "https://server10.mp3quran.net/ajm/$padded.mp3"
             else -> "https://server10.mp3quran.net/bader/Rewayat-Hafs-A-n-Assem/$padded.mp3"
         }
     }

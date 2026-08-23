@@ -160,6 +160,7 @@ export class AudioService {
       try {
         await QuranAudio.initialize();
         await QuranAudio.setActiveReciter({ reciterId: this.activeReciterId });
+        await this.syncNativeTimingData(this.activeReciterId);
         const state = await QuranAudio.getState();
         this.applyNativeState(state);
         await QuranAudio.addListener('playbackStateChanged', (nextState) => {
@@ -233,6 +234,7 @@ export class AudioService {
       try {
         await QuranAudio.pause();
         await QuranAudio.setActiveReciter({ reciterId });
+        await this.syncNativeTimingData(reciterId);
       } catch {
         // Ignore native error
       }
@@ -291,6 +293,11 @@ export class AudioService {
 
   getReciterId(): string {
     return this.activeReciterId;
+  }
+
+  private async syncNativeTimingData(reciterId: string): Promise<void> {
+    const timings = getReciterById(reciterId).timings;
+    await QuranAudio.setTimingData({ timingsJson: JSON.stringify(timings ?? {}) });
   }
 
   // =========================================================================

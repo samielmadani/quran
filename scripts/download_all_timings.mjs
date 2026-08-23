@@ -5,6 +5,9 @@ const RECITERS = [
   { id: 'mishari-alafasy', recitationId: 7, file: 'mishariAlafasyTimings.ts', varName: 'mishariAlafasyTimings' },
   { id: 'mahmoud-al-husary', recitationId: 6, file: 'mahmoudAlHusaryTimings.ts', varName: 'mahmoudAlHusaryTimings' },
   { id: 'abdul-basit-murattal', recitationId: 2, file: 'abdulBasitTimings.ts', varName: 'abdulBasitTimings' },
+  { id: 'muhammad-siddiq-al-minshawi', recitationId: 9, file: 'muhammadSiddiqAlMinshawiTimings.ts', varName: 'muhammadSiddiqAlMinshawiTimings' },
+  { id: 'abu-bakr-al-shatri', recitationId: 4, file: 'abuBakrAlShatriTimings.ts', varName: 'abuBakrAlShatriTimings' },
+  { id: 'abdul-rahman-al-sudais', recitationId: 3, file: 'abdulRahmanAlSudaisTimings.ts', varName: 'abdulRahmanAlSudaisTimings' },
 ];
 
 async function fetchWithRetry(url, retries = 3) {
