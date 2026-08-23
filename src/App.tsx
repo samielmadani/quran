@@ -119,7 +119,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isEditingBookmarks, setIsEditingBookmarks] = useState(false);
-  const [tafsirAyah, setTafsirAyah] = useState<{ surah: number; ayah: number } | null>(null);
+  const [tafsirSelection, setTafsirSelection] = useState<{ surah: number; ayah: number | null } | null>(null);
   const [showExitPrompt, setShowExitPrompt] = useState(false);
   const hideControlsTimer = useRef<number | undefined>(undefined);
   const swipeStartY = useRef<number | null>(null);
@@ -131,18 +131,18 @@ function App() {
 
   useEffect(() => {
     overlayState.current = {
-      tafsir: tafsirAyah !== null,
+      tafsir: tafsirSelection !== null,
       surah: surahListOpen,
       reciter: reciterModalOpen,
       settings: settingsOpen,
     };
-  }, [reciterModalOpen, settingsOpen, surahListOpen, tafsirAyah]);
+  }, [reciterModalOpen, settingsOpen, surahListOpen, tafsirSelection]);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const backButtonListener = CapApp.addListener('backButton', async () => {
       if (overlayState.current.tafsir) {
-        setTafsirAyah(null);
+        setTafsirSelection(null);
         return;
       }
       if (overlayState.current.surah) {
@@ -177,7 +177,7 @@ function App() {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current);
     longPressTimer.current = window.setTimeout(() => {
       longPressTriggered.current = true;
-      setTafsirAyah({ surah: surahNumber, ayah: ayahNumber });
+      setTafsirSelection({ surah: surahNumber, ayah: ayahNumber });
       longPressTimer.current = null;
     }, 500);
   };
@@ -195,6 +195,24 @@ function App() {
       return;
     }
     handleSelectAyah(surahNumber, ayahNumber);
+  };
+
+  const handleSurahPointerDown = (surahNumber: number) => {
+    longPressTriggered.current = false;
+    if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current);
+    longPressTimer.current = window.setTimeout(() => {
+      longPressTriggered.current = true;
+      setTafsirSelection({ surah: surahNumber, ayah: null });
+      longPressTimer.current = null;
+    }, 500);
+  };
+
+  const handleSurahClick = (surahNumber: number) => {
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      return;
+    }
+    dismissModal('surah', () => handleSelectAyah(surahNumber, firstAyahForSurah(surahNumber)));
   };
 
   const scheduleControlsHide = useCallback(() => {
@@ -380,7 +398,7 @@ function App() {
                       id={`ayah-${surah.number}-${surah.number === 1 ? 1 : 0}`}
                       role="button"
                       tabIndex={0}
-                      className={`ayah basmala-ayah ${currentAyah === (surah.number === 1 ? 1 : 0) ? 'active' : ''} ${tafsirAyah?.surah === surah.number && tafsirAyah.ayah === (surah.number === 1 ? 1 : 0) ? 'tafsir-selected' : ''}`}
+                      className={`ayah basmala-ayah ${currentAyah === (surah.number === 1 ? 1 : 0) ? 'active' : ''} ${tafsirSelection?.surah === surah.number && tafsirSelection.ayah === (surah.number === 1 ? 1 : 0) ? 'tafsir-selected' : ''}`}
                       onPointerDown={() => handleAyahPointerDown(surah.number, surah.number === 1 ? 1 : 0)}
                       onPointerUp={handleAyahPointerUp}
                       onPointerCancel={handleAyahPointerUp}
@@ -408,7 +426,7 @@ function App() {
                       id={`ayah-${surah.number}-${ayah.number}`}
                       role="button"
                       tabIndex={0}
-                      className={`ayah ${ayah.number === currentAyah ? 'active' : ''} ${tafsirAyah?.surah === surah.number && tafsirAyah.ayah === ayah.number ? 'tafsir-selected' : ''}`}
+                      className={`ayah ${ayah.number === currentAyah ? 'active' : ''} ${tafsirSelection?.surah === surah.number && tafsirSelection.ayah === ayah.number ? 'tafsir-selected' : ''}`}
                       onPointerDown={() => handleAyahPointerDown(surah.number, ayah.number)}
                       onPointerUp={handleAyahPointerUp}
                       onPointerCancel={handleAyahPointerUp}
@@ -753,8 +771,12 @@ function App() {
                     <div key={surahItem.number} className="surah-option-wrapper">
                       <button
                         type="button"
-                        className={`surah-option ${currentSurah === surahItem.number ? 'selected' : ''}`}
-                        onClick={() => dismissModal('surah', () => handleSelectAyah(surahItem.number, firstAyahForSurah(surahItem.number)))}
+                        className={`surah-option ${currentSurah === surahItem.number ? 'selected' : ''} ${tafsirSelection?.surah === surahItem.number && tafsirSelection.ayah === null ? 'tafsir-selected' : ''}`}
+                        onPointerDown={() => handleSurahPointerDown(surahItem.number)}
+                        onPointerUp={handleAyahPointerUp}
+                        onPointerCancel={handleAyahPointerUp}
+                        onContextMenu={(event) => event.preventDefault()}
+                        onClick={() => handleSurahClick(surahItem.number)}
                       >
                         <span className="surah-index-number">{toArabicNumerals(surahItem.number).padStart(3, '٠')}</span>
                         <span className="surah-option-copy">
@@ -1068,10 +1090,11 @@ function App() {
         />
 
         <TafsirModal
-          isOpen={tafsirAyah !== null}
-          surah={tafsirAyah ? surahs.find((item) => item.number === tafsirAyah.surah) : undefined}
-          ayahNumber={tafsirAyah?.ayah ?? null}
-          onClose={() => setTafsirAyah(null)}
+          isOpen={tafsirSelection !== null}
+          mode={tafsirSelection?.ayah === null ? 'surah' : 'ayah'}
+          surah={tafsirSelection ? surahs.find((item) => item.number === tafsirSelection.surah) : undefined}
+          ayahNumber={tafsirSelection?.ayah ?? null}
+          onClose={() => setTafsirSelection(null)}
         />
 
         <IonToast

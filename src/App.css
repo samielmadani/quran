@@ -1022,6 +1022,47 @@
   flex: 0 0 auto;
 }
 
+.tafsir-source,
+.tafsir-surah-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.tafsir-source strong {
+  color: var(--gold);
+}
+
+.tafsir-source span,
+.tafsir-surah-details span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.tafsir-surah-body {
+  overflow-y: auto;
+}
+
+.tafsir-entry {
+  margin-bottom: 1.25rem;
+}
+
+.tafsir-entry h3 {
+  margin: 0 0 0.35rem;
+  color: var(--gold);
+  font-size: 1rem;
+}
+
+.tafsir-entry p {
+  margin: 0;
+  line-height: 1.7;
+}
+
 .surah-surface > .modal-heading,
 .reciter-surface > .modal-heading {
   padding-left: 0;
