@@ -77,11 +77,11 @@ class QuranPlaybackService : MediaSessionService() {
         emitState()
     }
 
-    fun playAyah(surah: Int, ayah: Int) {
+    fun playAyah(surah: Int, ayah: Int, positionMs: Long? = null) {
         val range = timingData[surah]?.get(ayah)
         currentSurah = surah
         currentAyah = ayah
-        val startMs = range?.startMs ?: 0L
+        val startMs = positionMs ?: range?.startMs ?: 0L
         pendingSeekMs = startMs
         val mediaId = "${activeReciterId}_$surah"
 
@@ -235,8 +235,8 @@ class QuranPlaybackService : MediaSessionService() {
                 ?.key
             if (ayah != null && ayah != currentAyah) {
                 currentAyah = ayah
-                emitState()
             }
+            emitState()
             handler.postDelayed(this, 250)
         }
     }

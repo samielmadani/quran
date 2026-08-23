@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonIcon, IonModal } from '@ionic/react';
 import {
   checkmarkCircle,
@@ -38,6 +38,7 @@ export function ReciterModal({
   const [downloadProgress, setDownloadProgress] = useState<DownloadProgress>(
     reciterDownloadManager.getProgress(),
   );
+  const reciterListRef = useRef<HTMLDivElement | null>(null);
   const refreshInstalledStatus = async () => {
     const map: Record<string, number[]> = {};
     for (const r of RECITERS) {
@@ -51,14 +52,6 @@ export function ReciterModal({
       void refreshInstalledStatus();
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    document.querySelector<HTMLElement>('.reciter-surface .reciter-card.active')?.scrollIntoView({
-      block: 'center',
-      behavior: 'instant' as ScrollBehavior,
-    });
-  }, [isOpen, activeReciterId]);
 
   useEffect(() => {
     const unsubscribe = reciterDownloadManager.subscribe((progress) => {
@@ -115,6 +108,15 @@ export function ReciterModal({
       initialBreakpoint={1}
       handle
       className="quran-sheet-modal"
+      onDidPresent={() => {
+        window.requestAnimationFrame(() => {
+          const selected = reciterListRef.current?.querySelector<HTMLElement>('.reciter-card.active');
+          if (!selected) return;
+          const itemRect = selected.getBoundingClientRect();
+          if (itemRect.top >= 0 && itemRect.bottom <= window.innerHeight) return;
+          selected.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        });
+      }}
     >
       <IonContent className="sheet-content">
         <div className="modal-surface reciter-surface" dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -162,7 +164,7 @@ export function ReciterModal({
           )}
         </label>
 
-        <div className="reciter-list">
+        <div className="reciter-list" ref={reciterListRef}>
           {filteredReciters.map((reciter) => {
             const downloadedSurahs = downloadMap[reciter.id] ?? [];
             const count = downloadedSurahs.length;

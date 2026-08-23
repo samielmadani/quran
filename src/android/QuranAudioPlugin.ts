@@ -10,7 +10,7 @@ export interface QuranAudioEvent {
 
 export interface QuranAudioApi {
   initialize: () => Promise<void>;
-  playAyah: (request: { surah: number; ayah: number }) => Promise<void>;
+  playAyah: (request: { surah: number; ayah: number; positionMs?: number }) => Promise<void>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
   nextAyah: () => Promise<void>;

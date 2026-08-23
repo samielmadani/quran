@@ -45,7 +45,8 @@ class QuranAudioPlugin : Plugin() {
             call.reject("surah and ayah are required")
             return
         }
-        withService(call) { it.playAyah(surah, ayah) }
+        val positionMs = call.getLong("positionMs")
+        withService(call) { it.playAyah(surah, ayah, positionMs) }
     }
 
     @PluginMethod

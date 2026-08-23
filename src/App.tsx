@@ -38,6 +38,16 @@ const BASMALA = '﷽';
 const firstAyahForSurah = (surah: number) => (surah === 9 ? 1 : 0);
 const toArabicNumerals = (value: number) => String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
 
+const scrollSelectedItem = (container: HTMLElement | null, selector: string) => {
+  const selected = container?.querySelector<HTMLElement>(selector);
+  if (!selected) return;
+
+  const itemRect = selected.getBoundingClientRect();
+  if (itemRect.top >= 0 && itemRect.bottom <= window.innerHeight) return;
+
+  selected.scrollIntoView({ block: 'center', behavior: 'smooth' });
+};
+
 const formatTimestamp = (ms: number): string => {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const hours = Math.floor(totalSeconds / 3600);
@@ -176,12 +186,6 @@ function App() {
       ),
     );
   }, [searchQuery, surahs]);
-
-  useEffect(() => {
-    if (!surahListOpen) return;
-    const selected = surahListRef.current?.querySelector<HTMLElement>('.surah-option.selected');
-    selected?.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior });
-  }, [surahListOpen]);
 
   const openSettings = () => {
     setSurahListOpen(false);
@@ -535,6 +539,9 @@ function App() {
           initialBreakpoint={1}
           handle
           className="quran-sheet-modal"
+          onDidPresent={() => {
+            window.requestAnimationFrame(() => scrollSelectedItem(surahListRef.current, '.surah-option.selected'));
+          }}
         >
           <IonContent className="sheet-content">
             <div

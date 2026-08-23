@@ -155,6 +155,16 @@ export class AudioService {
     this.activeReciterId = await reciterStorage.getActiveReciterId();
     await this.restoreSettings();
     await this.restoreRecentlyPlayed();
+    const lastSession = await this.getLastSession();
+    if (lastSession) {
+      this.currentSurah = lastSession.surah;
+      this.currentAyah = lastSession.ayah;
+      this.currentPositionMs = lastSession.positionMs || 0;
+      if (lastSession.reciterId) {
+        this.activeReciterId = lastSession.reciterId;
+      }
+      this.computeInitialDuration(this.currentSurah);
+    }
 
     if (Capacitor.isNativePlatform()) {
       try {
@@ -162,7 +172,11 @@ export class AudioService {
         await QuranAudio.setActiveReciter({ reciterId: this.activeReciterId });
         await this.syncNativeTimingData(this.activeReciterId);
         const state = await QuranAudio.getState();
-        this.applyNativeState(state);
+        if (state.playing || !lastSession) {
+          this.applyNativeState(state);
+        } else {
+          this.notify();
+        }
         await QuranAudio.addListener('playbackStateChanged', (nextState) => {
           this.applyNativeState({
             playing: nextState.playing ?? false,
@@ -179,7 +193,6 @@ export class AudioService {
     }
 
     // Restore last session
-    const lastSession = await this.getLastSession();
     if (lastSession) {
       this.currentSurah = lastSession.surah;
       this.currentAyah = lastSession.ayah;
@@ -878,6 +891,7 @@ export class AudioService {
     this.durationMs = state.durationMs;
     this.updateMediaSession();
     this.notify();
+    this.throttlePersistState();
   }
 
   private setupLifecycleHandlers() {
@@ -900,9 +914,24 @@ export class AudioService {
     if (Capacitor.isNativePlatform()) {
       void CapApp.addListener('appStateChange', (state) => {
         if (!state.isActive) {
-          void this.persistState();
+          void this.persistNativeState();
         }
       });
+    }
+  }
+
+  private async persistNativeState() {
+    if (!Capacitor.isNativePlatform()) {
+      await this.persistState();
+      return;
+    }
+
+    try {
+      const state = await QuranAudio.getState();
+      this.applyNativeState(state);
+      await this.persistState();
+    } catch {
+      await this.persistState();
     }
   }
 
