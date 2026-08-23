@@ -504,6 +504,7 @@ function App() {
             className="collapsed-transport-overlay"
             aria-label="Collapsed player controls"
             onClick={(event) => {
+              event.stopPropagation();
               if (event.target === event.currentTarget) {
                 setControlsVisible(true);
                 scheduleControlsHide();
