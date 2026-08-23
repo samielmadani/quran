@@ -1044,6 +1044,75 @@
   font-size: 0.85rem;
 }
 
+.tafsir-source-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.2rem;
+  direction: ltr;
+}
+
+.tafsir-language-toggle {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.tafsir-language-toggle button {
+  padding: 0.4rem 0.7rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tafsir-language-toggle button.selected {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.tafsir-source-select {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.tafsir-source-select select {
+  max-width: min(52vw, 20rem);
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #101419;
+  color: var(--text);
+}
+
+.tafsir-body {
+  max-width: 72ch;
+  margin: 0 auto;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.08rem;
+  line-height: 1.85;
+}
+
+.tafsir-surface[dir='rtl'] .tafsir-body,
+.tafsir-surface[dir='rtl'] .tafsir-entry {
+  font-family: 'Amiri', serif;
+  font-size: 1.25rem;
+  line-height: 2.05;
+  text-align: right;
+}
+
+.tafsir-body > p,
+.tafsir-entry p {
+  margin: 0 0 1.25rem;
+}
+
 .tafsir-surah-body {
   overflow-y: auto;
 }
