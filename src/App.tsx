@@ -1,19 +1,16 @@
-import { IonApp, IonContent, IonIcon } from '@ionic/react';
+import { IonApp, IonContent, IonIcon, IonModal } from '@ionic/react';
 import {
   add,
   bookmarkOutline,
   checkmarkCircle,
   chevronBack,
-  chevronDown,
   chevronForward,
-  chevronUp,
   close,
   createOutline,
   globeOutline,
   heart,
   heartOutline,
   infiniteOutline,
-  listOutline,
   pause,
   pauseCircleOutline,
   pin,
@@ -38,6 +35,7 @@ import { audioService } from './services/audioService';
 import './App.css';
 
 const BASMALA = '﷽';
+const firstAyahForSurah = (surah: number) => (surah === 9 ? 1 : 0);
 const toArabicNumerals = (value: number) => String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
 
 const formatTimestamp = (ms: number): string => {
@@ -108,9 +106,9 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isEditingBookmarks, setIsEditingBookmarks] = useState(false);
-  const [closingModal, setClosingModal] = useState<'surah' | 'settings' | 'reciters' | null>(null);
   const hideControlsTimer = useRef<number | undefined>(undefined);
   const swipeStartY = useRef<number | null>(null);
+  const surahListRef = useRef<HTMLDivElement | null>(null);
 
   const scheduleControlsHide = useCallback(() => {
     window.clearTimeout(hideControlsTimer.current);
@@ -130,6 +128,8 @@ function App() {
       if (swipeStartY.current - event.clientY > 30) {
         setControlsVisible(true);
         scheduleControlsHide();
+      } else if (event.clientY - swipeStartY.current > 30 && controlsVisible) {
+        setControlsVisible(false);
       }
       swipeStartY.current = null;
     }
@@ -145,17 +145,17 @@ function App() {
     return () => window.clearTimeout(hideControlsTimer.current);
   }, [isPlaying, pinned, scheduleControlsHide]);
 
-  const handleCollapseControls = () => {
-    if (pinned) {
-      handleTogglePinned();
-    }
-    setControlsVisible(false);
-  };
-
   // Tap anywhere that isn't an interactive element to quickly collapse/uncollapse the footer
   const handleBackgroundToggle = (event: React.MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
     if (target.closest('button, .ayah, input, a, [role="dialog"], .modal-overlay, [role="progressbar"]')) {
+      return;
+    }
+    if (target.closest('.app-footer')) {
+      if (isCollapsed) {
+        setControlsVisible(true);
+        scheduleControlsHide();
+      }
       return;
     }
     setControlsVisible((prev) => {
@@ -177,15 +177,19 @@ function App() {
     );
   }, [searchQuery, surahs]);
 
+  useEffect(() => {
+    if (!surahListOpen) return;
+    const selected = surahListRef.current?.querySelector<HTMLElement>('.surah-option.selected');
+    selected?.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior });
+  }, [surahListOpen]);
+
   const openSettings = () => {
-    setClosingModal(null);
     setSurahListOpen(false);
     setReciterModalOpen(false);
     setSettingsOpen(true);
   };
 
   const openSurahSelector = () => {
-    setClosingModal(null);
     setSettingsOpen(false);
     setReciterModalOpen(false);
     setIsEditingBookmarks(false);
@@ -193,21 +197,16 @@ function App() {
   };
 
   const openReciterSelector = () => {
-    setClosingModal(null);
     setSettingsOpen(false);
     setSurahListOpen(false);
     setReciterModalOpen(true);
   };
 
   const dismissModal = (modal: 'surah' | 'settings' | 'reciters', after?: () => void) => {
-    setClosingModal(modal);
-    window.setTimeout(() => {
-      if (modal === 'surah') setSurahListOpen(false);
-      else if (modal === 'settings') setSettingsOpen(false);
-      else if (modal === 'reciters') setReciterModalOpen(false);
-      setClosingModal(null);
-      after?.();
-    }, 180);
+    if (modal === 'surah') setSurahListOpen(false);
+    else if (modal === 'settings') setSettingsOpen(false);
+    else if (modal === 'reciters') setReciterModalOpen(false);
+    if (after) window.setTimeout(after, 260);
   };
 
   // Accurate real-time progress ratio driven by player time
@@ -267,7 +266,7 @@ function App() {
   return (
     <IonApp>
       <div
-        className={`quran-shell ${isCollapsed ? 'controls-hidden' : ''}`}
+        className={`quran-shell ${isCollapsed ? 'controls-hidden' : ''} ${isPlaying ? 'is-playing' : ''}`}
         onPointerDown={handleShellPointerDown}
         onPointerUp={handleShellPointerUp}
         onClick={handleBackgroundToggle}
@@ -342,31 +341,6 @@ function App() {
           </main>
         </IonContent>
 
-        {/* Floating Quick Dock (When Uncollapsed/Expanded): [Pin Button (Left)] + [Downward Chevron (Right)] */}
-        {!isCollapsed && (
-          <div className="expanded-floating-dock" style={{ direction: 'ltr' }}>
-            <button
-              className={`floating-pin-btn ${pinned ? 'is-pinned' : ''}`}
-              type="button"
-              onClick={handleTogglePinned}
-              aria-label={pinned ? t.pinnedControls : t.pinnedControls}
-              title={pinned ? `${t.pinnedControls}: ON` : `${t.pinnedControls}: OFF`}
-            >
-              <IonIcon icon={pinned ? pin : pinOutline} />
-            </button>
-
-            <button
-              className="floating-collapse-btn"
-              type="button"
-              onClick={handleCollapseControls}
-              aria-label="Collapse player"
-              title="Collapse player"
-            >
-              <IonIcon icon={chevronDown} />
-            </button>
-          </div>
-        )}
-
         {/* Full Player & Toolbar */}
         <footer className="app-footer" dir={language === 'ar' ? 'rtl' : 'ltr'}>
           {/* Interactive Live Audio Progress Bar */}
@@ -422,7 +396,19 @@ function App() {
                 </button>
               )}
 
-              {/* Settings Button (Now shown in both portrait & landscape) */}
+              {/* Reciter Button */}
+              <button
+                className="reciter-live-chip"
+                type="button"
+                onClick={openReciterSelector}
+                aria-label={`${activeReciter.name}, ${formatTimestamp(positionMs)}`}
+                title={`${activeReciter.name} • ${formatTimestamp(positionMs)}`}
+              >
+                <span className="reciter-chip-name">{language === 'ar' ? activeReciter.nameArabic : activeReciter.name}</span>
+                <span className="reciter-chip-time">{formatTimestamp(positionMs)}</span>
+              </button>
+
+              {/* Settings Button */}
               <button
                 className="icon-button settings-button"
                 type="button"
@@ -433,21 +419,9 @@ function App() {
                 <IonIcon icon={settingsOutline} />
               </button>
 
-              {/* Reciter Live Chip (Desktop / Landscape only) */}
-              <button
-                className="reciter-live-chip desktop-only"
-                type="button"
-                onClick={openReciterSelector}
-                aria-label={`${activeReciter.name}, ${formatTimestamp(positionMs)}`}
-                title={`${activeReciter.name} • ${formatTimestamp(positionMs)}`}
-              >
-                <span className="reciter-chip-name">{language === 'ar' ? activeReciter.nameArabic : activeReciter.name}</span>
-                <span className="reciter-chip-time">{formatTimestamp(positionMs)}</span>
-              </button>
-
               {/* Autoplay / Repeat Cycle Button (Now shown in both portrait & landscape) */}
               <button
-                className={`icon-button repeat-cycle-btn ${repeatMode !== 'continuous' ? 'repeat-active' : ''}`}
+                className={`icon-button repeat-cycle-btn portrait-hidden ${repeatMode !== 'continuous' ? 'repeat-active' : ''}`}
                 type="button"
                 onClick={handleCycleRepeatMode}
                 aria-label={repeatBtnConfig.title}
@@ -499,6 +473,16 @@ function App() {
             {/* Right Meta & Surah Selection */}
             <div className="toolbar-group toolbar-right">
               <button
+                className={`icon-button footer-pin-btn ${pinned ? 'is-pinned' : ''}`}
+                type="button"
+                onClick={handleTogglePinned}
+                aria-label={t.pinnedControls}
+                title={t.pinnedControls}
+              >
+                <IonIcon icon={pinned ? pin : pinOutline} />
+              </button>
+
+              <button
                 className="surah-heading-btn"
                 type="button"
                 onClick={openSurahSelector}
@@ -511,103 +495,53 @@ function App() {
                   </span>
                 </div>
               </button>
-
-              <button
-                className="icon-button surah-list-btn"
-                type="button"
-                onClick={openSurahSelector}
-                aria-label={t.surahIndex}
-                title={t.surahIndex}
-              >
-                <IonIcon icon={listOutline} />
-              </button>
             </div>
           </div>
         </footer>
 
-        {/* Fully Collapsed Footer State: Bottom Progress, Floating Transport FAB & Upwards Expand Chevron */}
         {isCollapsed && (
-          <div className="collapsed-controls-wrapper" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-            {/* Center Floating Transport Cluster */}
-            <div className="collapsed-transport-cluster" onPointerDown={(e) => e.stopPropagation()}>
-              {showPrevNext && (
-                <button
-                  className="collapsed-nav-btn"
-                  type="button"
-                  onClick={handleLeftNavClick}
-                  aria-label={swapPrevNext ? t.nextAyah : t.previousAyah}
-                  title={swapPrevNext ? t.nextAyah : t.previousAyah}
-                >
-                  <IonIcon icon={swapPrevNext ? chevronForward : chevronBack} />
-                </button>
-              )}
-
-              <button
-                className={`collapsed-play-fab ${isPlaying ? 'is-playing' : ''}`}
-                onClick={handlePlayPause}
-                aria-label={isPlaying ? t.pause : t.play}
-                title={isPlaying ? t.pause : t.play}
-              >
-                <IonIcon icon={isPlaying ? pause : play} />
-              </button>
-
-              {showPrevNext && (
-                <button
-                  className="collapsed-nav-btn"
-                  type="button"
-                  onClick={handleRightNavClick}
-                  aria-label={swapPrevNext ? t.previousAyah : t.nextAyah}
-                  title={swapPrevNext ? t.previousAyah : t.nextAyah}
-                >
-                  <IonIcon icon={swapPrevNext ? chevronBack : chevronForward} />
-                </button>
-              )}
-            </div>
-
-            {/* Floating Upwards Chevron on Far Right (Uncollapses Footer without Pinning) */}
-            <button
-              className="collapsed-expand-btn"
-              type="button"
-              onClick={() => {
+          <div
+            className="collapsed-transport-overlay"
+            aria-label="Collapsed player controls"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
                 setControlsVisible(true);
                 scheduleControlsHide();
-              }}
-              aria-label={t.expandPlayer}
-              title={t.expandPlayer}
-            >
-              <IonIcon icon={chevronUp} />
+              }
+            }}
+          >
+            {showPrevNext && (
+              <button className="transport-button collapsed-transport-button" type="button" onClick={handleLeftNavClick} aria-label={swapPrevNext ? t.nextAyah : t.previousAyah}>
+                <IonIcon icon={swapPrevNext ? chevronForward : chevronBack} />
+              </button>
+            )}
+            <button className={`play-button collapsed-transport-play ${isPlaying ? 'is-playing' : ''}`} type="button" onClick={handlePlayPause} aria-label={isPlaying ? t.pause : t.play}>
+              <IonIcon icon={isPlaying ? pause : play} />
             </button>
-
-            {/* Bottom Edge Audio Progress Bar */}
-            <div
-              className="collapsed-bottom-progress"
-              onClick={handleProgressClick}
-              role="progressbar"
-              aria-valuenow={progressPercent}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label="Audio progress bar"
-            >
-              <div className="collapsed-progress-fill" style={{ width: `${progressPercent}%` }} />
-            </div>
+            {showPrevNext && (
+              <button className="transport-button collapsed-transport-button" type="button" onClick={handleRightNavClick} aria-label={swapPrevNext ? t.previousAyah : t.nextAyah}>
+                <IonIcon icon={swapPrevNext ? chevronBack : chevronForward} />
+              </button>
+            )}
           </div>
         )}
 
         {/* Surah Selector Modal (Full Screen, non-sticky) */}
-        {surahListOpen && (
-          <div
-            className={`modal-overlay ${closingModal === 'surah' ? 'is-closing' : ''}`}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="surah-modal-title"
-            onClick={() => dismissModal('surah')}
-          >
-            <div className="modal-surface surah-surface" dir={language === 'ar' ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
+        <IonModal
+          isOpen={surahListOpen}
+          onDidDismiss={() => setSurahListOpen(false)}
+          breakpoints={[0, 0.96, 1]}
+          initialBreakpoint={1}
+          handle
+          className="quran-sheet-modal"
+        >
+          <IonContent className="sheet-content">
+            <div
+              className="modal-surface surah-surface"
+              dir={language === 'ar' ? 'rtl' : 'ltr'}
+            >
               <div className="modal-heading">
-                <div>
-                  <span className="eyebrow">{t.quranIndex}</span>
-                  <h2 id="surah-modal-title">{t.selectSurah}</h2>
-                </div>
+                <h2 id="surah-modal-title">{t.selectSurah}</h2>
                 <button
                   className="icon-button"
                   type="button"
@@ -674,7 +608,7 @@ function App() {
                                 if (isEditingBookmarks) {
                                   handleToggleBookmark(surahNum);
                                 } else {
-                                  dismissModal('surah', () => handleSelectAyah(surahNum, 1));
+                                  dismissModal('surah', () => handleSelectAyah(surahNum, firstAyahForSurah(surahNum)));
                                 }
                               }}
                             >
@@ -727,7 +661,7 @@ function App() {
               )}
 
               {/* Surah List Grid - Heart icons ONLY shown in Edit mode */}
-              <div className="surah-grid">
+              <div className="surah-grid" ref={surahListRef}>
                 {filteredSurahs.map((surahItem) => {
                   const isBookmarked = bookmarkedSurahs.includes(surahItem.number);
                   return (
@@ -735,7 +669,7 @@ function App() {
                       <button
                         type="button"
                         className={`surah-option ${currentSurah === surahItem.number ? 'selected' : ''}`}
-                        onClick={() => dismissModal('surah', () => handleSelectAyah(surahItem.number, 1))}
+                        onClick={() => dismissModal('surah', () => handleSelectAyah(surahItem.number, firstAyahForSurah(surahItem.number)))}
                       >
                         <span className="surah-index-number">{toArabicNumerals(surahItem.number).padStart(3, '٠')}</span>
                         <span className="surah-option-copy">
@@ -765,24 +699,25 @@ function App() {
                 })}
               </div>
             </div>
-          </div>
-        )}
+          </IonContent>
+        </IonModal>
 
         {/* Settings Modal (Full Screen, non-sticky) */}
-        {settingsOpen && (
-          <div
-            className={`modal-overlay ${closingModal === 'settings' ? 'is-closing' : ''}`}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="settings-modal-title"
-            onClick={() => dismissModal('settings')}
-          >
-            <div className="modal-surface settings-surface driving-settings" dir={language === 'ar' ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
+        <IonModal
+          isOpen={settingsOpen}
+          onDidDismiss={() => setSettingsOpen(false)}
+          breakpoints={[0, 0.96, 1]}
+          initialBreakpoint={1}
+          handle
+          className="quran-sheet-modal"
+        >
+          <IonContent className="sheet-content">
+            <div
+              className="modal-surface settings-surface driving-settings"
+              dir={language === 'ar' ? 'rtl' : 'ltr'}
+            >
               <div className="modal-heading">
-                <div>
-                  <span className="eyebrow">{t.quickPreferences}</span>
-                  <h2 id="settings-modal-title">{t.settingsTitle}</h2>
-                </div>
+                <h2 id="settings-modal-title">{t.settingsTitle}</h2>
                 <button
                   className="icon-button"
                   type="button"
@@ -851,6 +786,18 @@ function App() {
                       type="button"
                       onClick={handleTogglePinned}
                       aria-pressed={pinned}
+                    >
+                      <span />
+                    </button>
+                  </div>
+
+                  <div className="driving-row">
+                    <span className="driving-row-label">{repeatBtnConfig.label}</span>
+                    <button
+                      className={`toggle ${repeatMode !== 'off' ? 'on' : ''}`}
+                      type="button"
+                      onClick={handleCycleRepeatMode}
+                      aria-label={repeatBtnConfig.title}
                     >
                       <span />
                     </button>
@@ -1018,13 +965,12 @@ function App() {
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          </IonContent>
+        </IonModal>
 
         {/* Reciter Management Modal (Full Screen, non-sticky) */}
         <ReciterModal
           isOpen={reciterModalOpen}
-          isClosing={closingModal === 'reciters'}
           activeReciterId={activeReciterId}
           isFirstStartup={isFirstStartup}
           t={t}

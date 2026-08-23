@@ -184,9 +184,14 @@ export function useQuranApp() {
       }
 
       // Check first startup status
-      const hasLaunched = localStorage.getItem('quran_has_launched_before');
+      let hasLaunched = localStorage.getItem('quran_has_launched_before');
+      if (!hasLaunched) {
+        const pref = await Preferences.get({ key: 'quran_has_launched_before' });
+        hasLaunched = pref.value;
+      }
       if (!hasLaunched) {
         localStorage.setItem('quran_has_launched_before', 'true');
+        await Preferences.set({ key: 'quran_has_launched_before', value: 'true' });
         const downloaded = await reciterStorage.getDownloadedSurahs(currentReciter);
         if (downloaded.length === 0) {
           setIsFirstStartup(true);
@@ -237,13 +242,18 @@ export function useQuranApp() {
   };
 
   const handlePlayPause = async () => {
-    setShowContinueCard(false);
     if (isPlaying) {
+      setShowContinueCard(false);
       await audioService.pause();
       return;
     }
 
-    await audioService.resume();
+    if (showContinueCard && lastSession) {
+      await audioService.resumeAtSavedPosition();
+    } else {
+      await audioService.resume();
+    }
+    setShowContinueCard(false);
   };
 
   const handleNextAyah = async () => {

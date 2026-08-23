@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IonIcon } from '@ionic/react';
+import { IonContent, IonIcon, IonModal } from '@ionic/react';
 import {
   checkmarkCircle,
   close,
@@ -16,7 +16,6 @@ import type { Translations } from '../data/translations';
 
 interface ReciterModalProps {
   isOpen: boolean;
-  isClosing: boolean;
   activeReciterId: string;
   isFirstStartup?: boolean;
   t: Translations;
@@ -27,7 +26,6 @@ interface ReciterModalProps {
 
 export function ReciterModal({
   isOpen,
-  isClosing,
   activeReciterId,
   isFirstStartup = false,
   t,
@@ -40,7 +38,6 @@ export function ReciterModal({
   const [downloadProgress, setDownloadProgress] = useState<DownloadProgress>(
     reciterDownloadManager.getProgress(),
   );
-
   const refreshInstalledStatus = async () => {
     const map: Record<string, number[]> = {};
     for (const r of RECITERS) {
@@ -54,6 +51,14 @@ export function ReciterModal({
       void refreshInstalledStatus();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    document.querySelector<HTMLElement>('.reciter-surface .reciter-card.active')?.scrollIntoView({
+      block: 'center',
+      behavior: 'instant' as ScrollBehavior,
+    });
+  }, [isOpen, activeReciterId]);
 
   useEffect(() => {
     const unsubscribe = reciterDownloadManager.subscribe((progress) => {
@@ -74,8 +79,6 @@ export function ReciterModal({
       ),
     );
   }, [searchQuery]);
-
-  if (!isOpen) return null;
 
   const handleSelect = (reciterId: string) => {
     setSearchQuery('');
@@ -105,19 +108,18 @@ export function ReciterModal({
   };
 
   return (
-    <div
-      className={`modal-overlay ${isClosing ? 'is-closing' : ''}`}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="reciter-modal-title"
-      onClick={onClose}
+    <IonModal
+      isOpen={isOpen}
+      onDidDismiss={onClose}
+      breakpoints={[0, 0.96, 1]}
+      initialBreakpoint={1}
+      handle
+      className="quran-sheet-modal"
     >
-      <div className="modal-surface reciter-surface" dir={language === 'ar' ? 'rtl' : 'ltr'} onClick={(e) => e.stopPropagation()}>
+      <IonContent className="sheet-content">
+        <div className="modal-surface reciter-surface" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div className="modal-heading">
-          <div>
-            <span className="eyebrow">{t.audioAndRecitations}</span>
-            <h2 id="reciter-modal-title">{t.chooseReciter}</h2>
-          </div>
+          <h2 id="reciter-modal-title">{t.chooseReciter}</h2>
           {!isFirstStartup && (
             <button className="icon-button" type="button" onClick={onClose} aria-label={t.close}>
               <IonIcon icon={close} />
@@ -303,7 +305,8 @@ export function ReciterModal({
             );
           })}
         </div>
-      </div>
-    </div>
+        </div>
+      </IonContent>
+    </IonModal>
   );
 }

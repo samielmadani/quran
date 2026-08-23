@@ -19,6 +19,8 @@ const LAST_SESSION_STORAGE_KEY = 'quran_last_session';
 const RECENTLY_PLAYED_STORAGE_KEY = 'quran_recently_played';
 const SETTINGS_STORAGE_KEY = 'quran_app_settings';
 
+const firstAyahForSurah = (surah: number) => (surah === 9 ? 1 : 0);
+
 export class AudioService {
   private currentSurah = DEFAULT_SURAH;
   private currentAyah = DEFAULT_AYAH;
@@ -454,7 +456,7 @@ export class AudioService {
 
     // End of surah
     if (this.repeatMode === 'repeat_surah') {
-      await this.playAyah({ surah: this.currentSurah, ayah: 1, positionMs: 0 });
+      await this.playAyah({ surah: this.currentSurah, ayah: firstAyahForSurah(this.currentSurah), positionMs: 0 });
       return;
     }
 
@@ -464,7 +466,7 @@ export class AudioService {
     }
 
     const nextSurahNum = this.currentSurah < 114 ? this.currentSurah + 1 : 1;
-    await this.playAyah({ surah: nextSurahNum, ayah: 1 });
+    await this.playAyah({ surah: nextSurahNum, ayah: firstAyahForSurah(nextSurahNum) });
   }
 
   async previousAyah() {
@@ -602,7 +604,11 @@ export class AudioService {
 
   private async saveRecentlyPlayed() {
     try {
-      localStorage.setItem(RECENTLY_PLAYED_STORAGE_KEY, JSON.stringify(this.recentlyPlayed));
+      const value = JSON.stringify(this.recentlyPlayed);
+      localStorage.setItem(RECENTLY_PLAYED_STORAGE_KEY, value);
+      if (Capacitor.isNativePlatform()) {
+        await Preferences.set({ key: RECENTLY_PLAYED_STORAGE_KEY, value });
+      }
     } catch {
       // Ignore
     }
@@ -610,7 +616,11 @@ export class AudioService {
 
   private async restoreRecentlyPlayed() {
     try {
-      const raw = localStorage.getItem(RECENTLY_PLAYED_STORAGE_KEY);
+      let raw = localStorage.getItem(RECENTLY_PLAYED_STORAGE_KEY);
+      if (Capacitor.isNativePlatform()) {
+        const pref = await Preferences.get({ key: RECENTLY_PLAYED_STORAGE_KEY });
+        raw = pref.value || raw;
+      }
       if (raw) {
         this.recentlyPlayed = JSON.parse(raw);
       }
@@ -745,13 +755,13 @@ export class AudioService {
     }
 
     if (this.repeatMode === 'repeat_surah') {
-      await this.playAyah({ surah: this.currentSurah, ayah: 1, positionMs: 0 });
+      await this.playAyah({ surah: this.currentSurah, ayah: firstAyahForSurah(this.currentSurah), positionMs: 0 });
       return;
     }
 
     // Continuous advance to next surah
     const nextSurah = this.currentSurah < 114 ? this.currentSurah + 1 : 1;
-    await this.playAyah({ surah: nextSurah, ayah: 1 });
+    await this.playAyah({ surah: nextSurah, ayah: firstAyahForSurah(nextSurah) });
   }
 
   getState(): PlaybackState {
