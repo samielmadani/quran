@@ -1,8 +1,10 @@
 package com.quran.automotive
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.view.KeyEvent
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -23,6 +25,7 @@ data class NativePlaybackState(
 
 class QuranPlaybackService : MediaSessionService() {
     companion object {
+        private const val MEDIA_REPEAT_KEY_CODE = 274
         var instance: QuranPlaybackService? = null
             private set
         private var pendingListener: ((NativePlaybackState) -> Unit)? = null
@@ -41,6 +44,7 @@ class QuranPlaybackService : MediaSessionService() {
     private var currentAyah = 1
     private var pendingSeekMs: Long? = null
     private var eventListener: ((NativePlaybackState) -> Unit)? = null
+    private var repeatSingle = false
     var activeReciterId: String = "badr-al-turki"
 
     override fun onCreate() {
@@ -49,14 +53,50 @@ class QuranPlaybackService : MediaSessionService() {
         loadTimingData()
         player = ExoPlayer.Builder(this).build().apply {
             addListener(object : Player.Listener {
-                override fun onIsPlayingChanged(isPlaying: Boolean) = emitState()
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     if (playbackState == Player.STATE_READY) applyPendingSeek()
+                    if (playbackState == Player.STATE_ENDED && repeatSingle) {
+                        playAyah(currentSurah, currentAyah)
+                    }
                     emitState()
                 }
+                override fun onIsPlayingChanged(isPlaying: Boolean) = emitState()
             })
         }
-        mediaSession = MediaSession.Builder(this, player).build()
+        mediaSession = MediaSession.Builder(this, player)
+            .setCallback(object : MediaSession.Callback {
+                override fun onMediaButtonEvent(
+                    session: MediaSession,
+                    controllerInfo: MediaSession.ControllerInfo,
+                    intent: Intent,
+                ): Boolean {
+                    val keyEvent = intent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT) ?: return false
+                    if (keyEvent.action != KeyEvent.ACTION_DOWN) return true
+
+                    when (keyEvent.keyCode) {
+                        KeyEvent.KEYCODE_MEDIA_PLAY,
+                        KeyEvent.KEYCODE_MEDIA_PAUSE,
+                        KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
+                            if (player.isPlaying) pause() else resume()
+                            return true
+                        }
+                        KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                            previousAyah()
+                            return true
+                        }
+                        KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                            nextAyah()
+                            return true
+                        }
+                        MEDIA_REPEAT_KEY_CODE -> {
+                            repeatSingle = !repeatSingle
+                            return true
+                        }
+                    }
+                    return false
+                }
+            })
+            .build()
         pendingListener?.let(::setEventListener)
         handler.post(positionPoller)
     }

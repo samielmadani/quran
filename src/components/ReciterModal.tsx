@@ -122,11 +122,6 @@ export function ReciterModal({
         <div className="modal-surface reciter-surface" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div className="modal-heading">
           <h2 id="reciter-modal-title">{t.chooseReciter}</h2>
-          {!isFirstStartup && (
-            <button className="icon-button" type="button" onClick={onClose} aria-label={t.close}>
-              <IonIcon icon={close} />
-            </button>
-          )}
         </div>
 
         {isFirstStartup && (
@@ -144,25 +139,27 @@ export function ReciterModal({
         )}
 
         {/* Search input with clear X button */}
-        <label className="search-field">
-          <IonIcon icon={searchOutline} />
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t.searchReciterPlaceholder}
-            aria-label={t.chooseReciter}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              className="search-clear-btn"
-              onClick={() => setSearchQuery('')}
-              aria-label={t.clearSearch}
-            >
+        <div className="selector-search-row">
+          {!isFirstStartup && (
+            <button className="icon-button selector-close-button" type="button" onClick={onClose} aria-label={t.close}>
               <IonIcon icon={close} />
             </button>
           )}
-        </label>
+          <label className="search-field">
+            <IonIcon icon={searchOutline} />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t.searchReciterPlaceholder}
+              aria-label={t.chooseReciter}
+            />
+            {searchQuery && (
+              <button type="button" className="search-clear-btn" onClick={() => setSearchQuery('')} aria-label={t.clearSearch}>
+                <IonIcon icon={close} />
+              </button>
+            )}
+          </label>
+        </div>
 
         <div className="reciter-list" ref={reciterListRef}>
           {filteredReciters.map((reciter) => {

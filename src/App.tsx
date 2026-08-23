@@ -1,4 +1,6 @@
-import { IonApp, IonContent, IonIcon, IonModal } from '@ionic/react';
+import { IonApp, IonContent, IonIcon, IonModal, IonToast } from '@ionic/react';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 import {
   add,
   bookmarkOutline,
@@ -30,6 +32,7 @@ import { getSurahJuzNumber } from './data/juzData';
 import { ReciterModal } from './components/ReciterModal';
 import { SurahHeader } from './components/SurahHeader';
 import { ContinueListeningCard } from './components/ContinueListeningCard';
+import { TafsirModal } from './components/TafsirModal';
 import type { SleepTimerMode } from './types/audio';
 import { audioService } from './services/audioService';
 import './App.css';
@@ -116,9 +119,83 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isEditingBookmarks, setIsEditingBookmarks] = useState(false);
+  const [tafsirAyah, setTafsirAyah] = useState<{ surah: number; ayah: number } | null>(null);
+  const [showExitPrompt, setShowExitPrompt] = useState(false);
   const hideControlsTimer = useRef<number | undefined>(undefined);
   const swipeStartY = useRef<number | null>(null);
   const surahListRef = useRef<HTMLDivElement | null>(null);
+  const longPressTimer = useRef<number | null>(null);
+  const longPressTriggered = useRef(false);
+  const lastBackPress = useRef(0);
+  const overlayState = useRef({ tafsir: false, surah: false, reciter: false, settings: false });
+
+  useEffect(() => {
+    overlayState.current = {
+      tafsir: tafsirAyah !== null,
+      surah: surahListOpen,
+      reciter: reciterModalOpen,
+      settings: settingsOpen,
+    };
+  }, [reciterModalOpen, settingsOpen, surahListOpen, tafsirAyah]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const backButtonListener = CapApp.addListener('backButton', async () => {
+      if (overlayState.current.tafsir) {
+        setTafsirAyah(null);
+        return;
+      }
+      if (overlayState.current.surah) {
+        setSurahListOpen(false);
+        return;
+      }
+      if (overlayState.current.reciter) {
+        setReciterModalOpen(false);
+        return;
+      }
+      if (overlayState.current.settings) {
+        setSettingsOpen(false);
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastBackPress.current < 2000) {
+        await CapApp.exitApp();
+        return;
+      }
+      lastBackPress.current = now;
+      setShowExitPrompt(true);
+    });
+
+    return () => {
+      void backButtonListener.then((listener) => listener.remove());
+    };
+  }, [setReciterModalOpen, setSurahListOpen]);
+
+  const handleAyahPointerDown = (surahNumber: number, ayahNumber: number) => {
+    longPressTriggered.current = false;
+    if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current);
+    longPressTimer.current = window.setTimeout(() => {
+      longPressTriggered.current = true;
+      setTafsirAyah({ surah: surahNumber, ayah: ayahNumber });
+      longPressTimer.current = null;
+    }, 500);
+  };
+
+  const handleAyahPointerUp = () => {
+    if (longPressTimer.current !== null) {
+      window.clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleAyahClick = (surahNumber: number, ayahNumber: number) => {
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      return;
+    }
+    handleSelectAyah(surahNumber, ayahNumber);
+  };
 
   const scheduleControlsHide = useCallback(() => {
     window.clearTimeout(hideControlsTimer.current);
@@ -303,8 +380,12 @@ function App() {
                       id={`ayah-${surah.number}-${surah.number === 1 ? 1 : 0}`}
                       role="button"
                       tabIndex={0}
-                      className={`ayah basmala-ayah ${currentAyah === (surah.number === 1 ? 1 : 0) ? 'active' : ''}`}
-                      onClick={() => handleSelectAyah(surah.number, surah.number === 1 ? 1 : 0)}
+                      className={`ayah basmala-ayah ${currentAyah === (surah.number === 1 ? 1 : 0) ? 'active' : ''} ${tafsirAyah?.surah === surah.number && tafsirAyah.ayah === (surah.number === 1 ? 1 : 0) ? 'tafsir-selected' : ''}`}
+                      onPointerDown={() => handleAyahPointerDown(surah.number, surah.number === 1 ? 1 : 0)}
+                      onPointerUp={handleAyahPointerUp}
+                      onPointerCancel={handleAyahPointerUp}
+                      onContextMenu={(event) => event.preventDefault()}
+                      onClick={() => handleAyahClick(surah.number, surah.number === 1 ? 1 : 0)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           handleSelectAyah(surah.number, surah.number === 1 ? 1 : 0);
@@ -327,8 +408,12 @@ function App() {
                       id={`ayah-${surah.number}-${ayah.number}`}
                       role="button"
                       tabIndex={0}
-                      className={`ayah ${ayah.number === currentAyah ? 'active' : ''}`}
-                      onClick={() => handleSelectAyah(surah.number, ayah.number)}
+                      className={`ayah ${ayah.number === currentAyah ? 'active' : ''} ${tafsirAyah?.surah === surah.number && tafsirAyah.ayah === ayah.number ? 'tafsir-selected' : ''}`}
+                      onPointerDown={() => handleAyahPointerDown(surah.number, ayah.number)}
+                      onPointerUp={handleAyahPointerUp}
+                      onPointerCancel={handleAyahPointerUp}
+                      onContextMenu={(event) => event.preventDefault()}
+                      onClick={() => handleAyahClick(surah.number, ayah.number)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           handleSelectAyah(surah.number, ayah.number);
@@ -550,36 +635,28 @@ function App() {
             >
               <div className="modal-heading">
                 <h2 id="surah-modal-title">{t.selectSurah}</h2>
-                <button
-                  className="icon-button"
-                  type="button"
-                  onClick={() => dismissModal('surah')}
-                  aria-label={t.close}
-                >
-                  <IonIcon icon={close} />
-                </button>
               </div>
 
               {/* Search Field with Clear X Button */}
-              <label className="search-field">
-                <IonIcon icon={searchOutline} />
-                <input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder={t.searchSurahPlaceholder}
-                  aria-label={t.selectSurah}
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    className="search-clear-btn"
-                    onClick={() => setSearchQuery('')}
-                    aria-label={t.clearSearch}
-                  >
-                    <IonIcon icon={close} />
-                  </button>
-                )}
-              </label>
+              <div className="selector-search-row">
+                <button className="icon-button selector-close-button" type="button" onClick={() => dismissModal('surah')} aria-label={t.close}>
+                  <IonIcon icon={close} />
+                </button>
+                <label className="search-field">
+                  <IonIcon icon={searchOutline} />
+                  <input
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder={t.searchSurahPlaceholder}
+                    aria-label={t.selectSurah}
+                  />
+                  {searchQuery && (
+                    <button type="button" className="search-clear-btn" onClick={() => setSearchQuery('')} aria-label={t.clearSearch}>
+                      <IonIcon icon={close} />
+                    </button>
+                  )}
+                </label>
+              </div>
 
               {/* Bookmarks Row (When enabled) with Heart icon */}
               {enableBookmarks && !searchQuery && (
@@ -988,6 +1065,21 @@ function App() {
             void handleSelectReciter(id);
             dismissModal('reciters');
           }}
+        />
+
+        <TafsirModal
+          isOpen={tafsirAyah !== null}
+          surah={tafsirAyah ? surahs.find((item) => item.number === tafsirAyah.surah) : undefined}
+          ayahNumber={tafsirAyah?.ayah ?? null}
+          onClose={() => setTafsirAyah(null)}
+        />
+
+        <IonToast
+          isOpen={showExitPrompt}
+          message="Press back again to exit"
+          duration={2000}
+          position="bottom"
+          onDidDismiss={() => setShowExitPrompt(false)}
         />
       </div>
     </IonApp>
