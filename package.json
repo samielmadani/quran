@@ -15,7 +15,8 @@
     "android:sync": "npx cap sync android",
     "android:open": "npx cap open android",
     "android:build": "npm run build && npx cap sync android",
-    "build:apk": "npm run build && npx cap sync android && cd android && .\\gradlew.bat assembleDebug && copy /Y app\\build\\outputs\\apk\\debug\\app-debug.apk ..\\artifacts\\quran-latest.apk"
+    "build:apk": "npm run build && npx cap sync android && cd android && .\\gradlew.bat assembleDebug && copy /Y app\\build\\outputs\\apk\\debug\\app-debug.apk ..\\artifacts\\quran-latest.apk",
+    "build:android:release": "npm run build && npx cap sync android && cd android && .\\gradlew.bat assembleRelease bundleRelease && if exist app\\build\\outputs\\apk\\release\\app-release.apk (copy /Y app\\build\\outputs\\apk\\release\\app-release.apk ..\\artifacts\\quran-latest.apk) else (copy /Y app\\build\\outputs\\apk\\release\\app-release-unsigned.apk ..\\artifacts\\quran-latest.apk) && copy /Y app\\build\\outputs\\bundle\\release\\app-release.aab ..\\artifacts\\quran-latest.aab"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

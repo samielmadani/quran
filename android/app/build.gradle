@@ -4,11 +4,37 @@ plugins {
 }
 
 android {
-    namespace 'com.quran.automotive'
+    namespace 'com.samielmadani.quran'
     compileSdk 36
 
+    def signingProperty = { String name ->
+        project.findProperty(name) ?: System.getenv(name)
+    }
+    def releaseSigningProperties = [
+        storeFile: signingProperty('RELEASE_STORE_FILE'),
+        storePassword: signingProperty('RELEASE_STORE_PASSWORD'),
+        keyAlias: signingProperty('RELEASE_KEY_ALIAS'),
+        keyPassword: signingProperty('RELEASE_KEY_PASSWORD')
+    ]
+    def configuredSigningProperties = releaseSigningProperties.findAll { entry -> entry.value }
+
+    if (!configuredSigningProperties.isEmpty() && configuredSigningProperties.size() != releaseSigningProperties.size()) {
+        throw new GradleException('Release signing requires RELEASE_STORE_FILE, RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, and RELEASE_KEY_PASSWORD.')
+    }
+
+    signingConfigs {
+        if (configuredSigningProperties.size() == releaseSigningProperties.size()) {
+            release {
+                storeFile file(releaseSigningProperties.storeFile)
+                storePassword releaseSigningProperties.storePassword
+                keyAlias releaseSigningProperties.keyAlias
+                keyPassword releaseSigningProperties.keyPassword
+            }
+        }
+    }
+
     defaultConfig {
-        applicationId 'com.quran.automotive'
+        applicationId 'com.samielmadani.quran'
         minSdk 26
         targetSdk 36
         versionCode 1
@@ -20,6 +46,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (configuredSigningProperties.size() == releaseSigningProperties.size()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 

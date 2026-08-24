@@ -42,13 +42,36 @@ npm install
 npm run dev
 ```
 
-## Production build
+## Android builds
 
 ```bash
 npm run build:apk
 ```
 
-The signed debug APK is copied to `artifacts/quran-latest.apk`. This file is intentionally committed so the public repository always contains an installable latest APK. Gradle's intermediate output remains ignored. For a production release APK, configure a private signing key through Gradle/GitHub Secrets.
+This existing command builds the debug APK and copies it to `artifacts/quran-latest.apk`.
+
+For release APK and App Bundle outputs, run:
+
+```bash
+npm run build:android:release
+```
+
+This builds the web app, syncs Capacitor, assembles the release APK and App Bundle,
+and copies them to `artifacts/quran-latest.apk` and `artifacts/quran-latest.aab`.
+
+Release signing is opt-in. Set all four values as environment variables or Gradle
+properties before running the release command:
+
+- `RELEASE_STORE_FILE`: path to the existing keystore
+- `RELEASE_STORE_PASSWORD`: keystore password
+- `RELEASE_KEY_ALIAS`: key alias
+- `RELEASE_KEY_PASSWORD`: key password
+
+For local Gradle properties, use the user-level Gradle file at
+`%USERPROFILE%\\.gradle\\gradle.properties`; do not commit these values. If none
+are supplied, Gradle produces unsigned release APK and App Bundle files. Partial
+configuration fails the build rather than silently producing an unexpectedly
+signed artifact.
 
 ## Download the Android app
 
