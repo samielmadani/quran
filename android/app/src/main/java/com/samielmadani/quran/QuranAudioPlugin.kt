@@ -108,8 +108,10 @@ class QuranAudioPlugin : Plugin() {
 
     @PluginMethod
     fun getActiveReciter(call: PluginCall) {
-        val service = QuranPlaybackService.instance
-        val active = service?.activeReciterId ?: "badr-al-turki"
+        val active = QuranPlaybackService.instance?.activeReciterId
+            ?: context.getSharedPreferences("quran_playback", 0)
+                .getString("reciterId", "badr-al-turki")
+            ?: "badr-al-turki"
         call.resolve(JSObject().apply {
             put("reciterId", active)
         })

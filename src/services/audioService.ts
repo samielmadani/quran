@@ -19,8 +19,6 @@ const LAST_SESSION_STORAGE_KEY = 'quran_last_session';
 const RECENTLY_PLAYED_STORAGE_KEY = 'quran_recently_played';
 const SETTINGS_STORAGE_KEY = 'quran_app_settings';
 
-const firstAyahForSurah = (surah: number) => (surah === 9 ? 1 : 0);
-
 export class AudioService {
   private currentSurah = DEFAULT_SURAH;
   private currentAyah = DEFAULT_AYAH;
@@ -273,8 +271,6 @@ export class AudioService {
       let startMs = 0;
       if (timing) {
         startMs = timing.startMs;
-      } else if (ayah === 0) {
-        startMs = 0;
       } else if (ayah === 1 && reciter.timings?.[surah]?.[1]) {
         startMs = reciter.timings[surah][1].startMs;
       }
@@ -351,8 +347,6 @@ export class AudioService {
         startMs = payload.positionMs;
       } else if (timing) {
         startMs = timing.startMs;
-      } else if (payload.ayah === 0) {
-        startMs = 0;
       } else if (payload.ayah === 1 && reciter.timings?.[payload.surah]?.[1]) {
         startMs = reciter.timings[payload.surah][1].startMs;
       }
@@ -480,7 +474,7 @@ export class AudioService {
 
     // End of surah
     if (this.repeatMode === 'repeat_surah') {
-      await this.playAyah({ surah: this.currentSurah, ayah: firstAyahForSurah(this.currentSurah), positionMs: 0 });
+      await this.playAyah({ surah: this.currentSurah, ayah: 1, positionMs: 0 });
       return;
     }
 
@@ -490,7 +484,7 @@ export class AudioService {
     }
 
     const nextSurahNum = this.currentSurah < 114 ? this.currentSurah + 1 : 1;
-    await this.playAyah({ surah: nextSurahNum, ayah: firstAyahForSurah(nextSurahNum) });
+    await this.playAyah({ surah: nextSurahNum, ayah: 1 });
   }
 
   async previousAyah() {
@@ -782,14 +776,14 @@ export class AudioService {
     }
 
     if (this.repeatMode === 'repeat_surah') {
-      await this.playAyah({ surah: this.currentSurah, ayah: firstAyahForSurah(this.currentSurah), positionMs: 0 });
+      await this.playAyah({ surah: this.currentSurah, ayah: 1, positionMs: 0 });
       return;
     }
 
     // Continuous advance to next surah
     if (this.currentSurah < 114) {
       const nextSurah = this.currentSurah + 1;
-      await this.playAyah({ surah: nextSurah, ayah: firstAyahForSurah(nextSurah) });
+      await this.playAyah({ surah: nextSurah, ayah: 1 });
     } else {
       this.playing = false;
       this.notify();
@@ -841,7 +835,7 @@ export class AudioService {
 
     // If before first timing start (e.g. Bismillah before ayah 1)
     if (currentMs < entries[0].timing.startMs) {
-      return this.currentSurah === 1 ? 1 : 0;
+      return 1;
     }
 
     return undefined;

@@ -81,13 +81,6 @@ for (let surah = 1; surah <= 114; surah += 1) {
   allTimings[surah] = parseSurah(readFileSync(resolve(sourceDirectory, filename)), surah);
 }
 
-const bismillahEndMs = allTimings[1][2].startMs;
-for (let surah = 2; surah <= 114; surah += 1) {
-  if (surah !== 9) {
-    allTimings[surah][0] = { startMs: 0, endMs: bismillahEndMs };
-  }
-}
-
 mkdirSync(dirname(outputPath), { recursive: true });
 const output = `import type { AyahTiming } from '../types/audio';\n\nexport const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = ${JSON.stringify(allTimings, null, 2)};\n`;
 writeFileSync(outputPath, output);

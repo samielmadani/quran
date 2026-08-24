@@ -266,9 +266,7 @@ class QuranPlaybackService : MediaSessionService() {
         currentAyah = ayah
         val startMs = positionMs ?: range?.startMs ?: 0L
         pendingSeekMs = startMs
-        val basmalaEndMs = timingData[1]?.get(2)?.startMs ?: 0L
-        val isBasmala = ayah == 0 && surah != 9 && timingData[surah]?.get(0) != null && basmalaEndMs > 0L
-        val mediaId = "${activeReciterId}_${surah}_${if (isBasmala) "basmala" else "ayah"}"
+        val mediaId = "${activeReciterId}_${surah}_ayah"
 
         if (player.currentMediaItem?.mediaId == mediaId) {
             player.seekTo(startMs)
@@ -278,7 +276,7 @@ class QuranPlaybackService : MediaSessionService() {
             return
         }
 
-        val mediaItem = resolveMediaItem(surah, ayah, mediaId, isBasmala)
+        val mediaItem = resolveMediaItem(surah, ayah, mediaId)
         if (mediaItem == null) {
             emitState()
             return
@@ -312,8 +310,8 @@ class QuranPlaybackService : MediaSessionService() {
         }
     }
 
-    private fun resolveMediaItem(surah: Int, ayah: Int, mediaId: String, isBasmala: Boolean): MediaItem? {
-        val sourceSurah = if (isBasmala) 1 else surah
+    private fun resolveMediaItem(surah: Int, ayah: Int, mediaId: String): MediaItem? {
+        val sourceSurah = surah
         val padded = String.format(Locale.US, "%03d.mp3", sourceSurah)
         val metadata = MediaMetadata.Builder()
             .setTitle("Surah $surah — Ayah $ayah")
@@ -328,7 +326,6 @@ class QuranPlaybackService : MediaSessionService() {
                 .setUri(Uri.fromFile(internalFile))
                 .setMediaId(mediaId)
                 .setMediaMetadata(metadata)
-                .setClippingConfiguration(clippingFor(isBasmala))
                 .build()
         }
 
@@ -341,7 +338,6 @@ class QuranPlaybackService : MediaSessionService() {
                     .setUri(Uri.fromFile(externalFile))
                     .setMediaId(mediaId)
                     .setMediaMetadata(metadata)
-                    .setClippingConfiguration(clippingFor(isBasmala))
                     .build()
             }
         }
@@ -352,17 +348,6 @@ class QuranPlaybackService : MediaSessionService() {
             .setUri(Uri.parse(remoteUrl))
             .setMediaId(mediaId)
             .setMediaMetadata(metadata)
-            .setClippingConfiguration(clippingFor(isBasmala))
-            .build()
-    }
-
-    private fun clippingFor(isBasmala: Boolean): MediaItem.ClippingConfiguration {
-        if (!isBasmala) return MediaItem.ClippingConfiguration.Builder().build()
-        val endMs = timingData[1]?.get(2)?.startMs ?: 0L
-        if (endMs <= 0L) return MediaItem.ClippingConfiguration.Builder().build()
-        return MediaItem.ClippingConfiguration.Builder()
-            .setStartPositionMs(0L)
-            .setEndPositionMs(endMs)
             .build()
     }
 
@@ -384,16 +369,10 @@ class QuranPlaybackService : MediaSessionService() {
         advanceToNextAyah()
     }
 
-    private fun firstAyahForSurah(surah: Int): Int {
-        val timings = timingData[surah] ?: return 1
-        if (surah != 9 && timings.containsKey(0)) return 0
-        return timings.keys.filter { it > 0 }.minOrNull() ?: 1
-    }
-
     private fun nextSurah() {
         val nextSurah = currentSurah + 1
         if (nextSurah <= 114 && timingData[nextSurah] != null) {
-            playAyah(nextSurah, firstAyahForSurah(nextSurah))
+            playAyah(nextSurah, 1)
         } else {
             player.pause()
             emitState()
@@ -403,7 +382,7 @@ class QuranPlaybackService : MediaSessionService() {
     private fun previousSurah() {
         val previousSurah = currentSurah - 1
         if (previousSurah >= 1 && timingData[previousSurah] != null) {
-            playAyah(previousSurah, firstAyahForSurah(previousSurah))
+            playAyah(previousSurah, 1)
         }
     }
 
@@ -420,7 +399,7 @@ class QuranPlaybackService : MediaSessionService() {
             return
         }
         if (repeatMode == "repeat_surah") {
-            playAyah(currentSurah, firstAyahForSurah(currentSurah), 0L)
+            playAyah(currentSurah, 1, 0L)
             return
         }
         val next = currentAyah + 1
@@ -431,7 +410,7 @@ class QuranPlaybackService : MediaSessionService() {
 
         val nextSurah = currentSurah + 1
         if (nextSurah <= 114 && timingData[nextSurah] != null) {
-            playAyah(nextSurah, firstAyahForSurah(nextSurah))
+            playAyah(nextSurah, 1)
         } else {
             player.pause()
             emitState()

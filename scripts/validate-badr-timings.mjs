@@ -19,16 +19,12 @@ for (const surah of quran) {
   const timings = data[surah.id];
   if (!timings) { missing += surah.total_verses; continue; }
   surahs += 1;
-  if (surah.id !== 1 && surah.id !== 9) {
-    const bismillah = timings[0];
-    if (!bismillah || bismillah.startMs !== 0 || bismillah.endMs !== data[1][2].startMs) invalid += 1;
-  }
   for (let ayah = 1; ayah <= surah.total_verses; ayah += 1) {
     const timing = timings[ayah];
     if (!timing) { missing += 1; continue; }
     ayahs += 1;
     if (timing.startMs < 0 || timing.startMs >= timing.endMs) invalid += 1;
-    const previous = ayah === 1 && surah.id !== 1 && surah.id !== 9 ? undefined : timings[ayah - 1];
+    const previous = ayah > 1 ? timings[ayah - 1] : undefined;
     if (previous && previous.endMs > timing.startMs) {
       const overlapMs = previous.endMs - timing.startMs;
       if (overlapMs <= 100) sourceOverlaps += 1;

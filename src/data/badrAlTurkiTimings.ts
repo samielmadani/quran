@@ -32,10 +32,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "2": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4520,
       "endMs": 9910
@@ -1182,10 +1178,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "3": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4280,
       "endMs": 11350
@@ -1988,10 +1980,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "4": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4660,
       "endMs": 37600
@@ -2698,10 +2686,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "5": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4880,
       "endMs": 25840
@@ -3184,10 +3168,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "6": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4680,
       "endMs": 20320
@@ -3850,10 +3830,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "7": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 5510,
       "endMs": 15700
@@ -4680,10 +4656,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "8": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 5010,
       "endMs": 26570
@@ -5504,10 +5476,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "10": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4720,
       "endMs": 13870
@@ -5946,10 +5914,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "11": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4560,
       "endMs": 18080
@@ -6444,10 +6408,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "12": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4890,
       "endMs": 13770
@@ -6894,10 +6854,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "13": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 5110,
       "endMs": 26030
@@ -7072,10 +7028,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "14": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4320,
       "endMs": 26530
@@ -7286,10 +7238,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "15": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4580,
       "endMs": 14800
@@ -7688,10 +7636,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "16": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4780,
       "endMs": 15530
@@ -8206,10 +8150,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "17": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4890,
       "endMs": 27950
@@ -8656,10 +8596,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "18": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4740,
       "endMs": 11710
@@ -9102,10 +9038,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "19": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4440,
       "endMs": 15180
@@ -9500,10 +9432,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "20": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4300,
       "endMs": 5080
@@ -10046,10 +9974,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "21": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4800,
       "endMs": 11930
@@ -10500,10 +10424,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "22": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4520,
       "endMs": 13550
@@ -10818,10 +10738,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "23": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4870,
       "endMs": 8790
@@ -11296,10 +11212,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "24": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4890,
       "endMs": 21800
@@ -11558,10 +11470,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "25": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4910,
       "endMs": 12670
@@ -11872,10 +11780,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "26": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4460,
       "endMs": 11160
@@ -12786,10 +12690,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "27": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4600,
       "endMs": 12830
@@ -13164,10 +13064,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "28": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4710,
       "endMs": 11910
@@ -13522,10 +13418,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "29": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4830,
       "endMs": 11690
@@ -13804,10 +13696,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "30": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4520,
       "endMs": 10730
@@ -14050,10 +13938,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "31": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4320,
       "endMs": 10500
@@ -14192,10 +14076,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "32": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4590,
       "endMs": 10100
@@ -14318,10 +14198,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "33": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4720,
       "endMs": 17900
@@ -14616,10 +14492,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "34": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4770,
       "endMs": 16600
@@ -14838,10 +14710,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "35": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 5010,
       "endMs": 26830
@@ -15024,10 +14892,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "36": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4490,
       "endMs": 5400
@@ -15362,10 +15226,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "37": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4600,
       "endMs": 9800
@@ -16096,10 +15956,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "38": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4930,
       "endMs": 11110
@@ -16454,10 +16310,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "39": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4820,
       "endMs": 11010
@@ -16760,10 +16612,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "40": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4480,
       "endMs": 7010
@@ -17106,10 +16954,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "41": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4590,
       "endMs": 7390
@@ -17328,10 +17172,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "42": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4690,
       "endMs": 8090
@@ -17546,10 +17386,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "43": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4470,
       "endMs": 7150
@@ -17908,10 +17744,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "44": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4510,
       "endMs": 7390
@@ -18150,10 +17982,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "45": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4490,
       "endMs": 5730
@@ -18304,10 +18132,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "46": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4690,
       "endMs": 6250
@@ -18450,10 +18274,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "47": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4620,
       "endMs": 11370
@@ -18608,10 +18428,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "48": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4870,
       "endMs": 9910
@@ -18730,10 +18546,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "49": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4440,
       "endMs": 17900
@@ -18808,10 +18620,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "50": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4700,
       "endMs": 11490
@@ -18994,10 +18802,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "51": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 5010,
       "endMs": 7110
@@ -19240,10 +19044,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "52": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4530,
       "endMs": 7880
@@ -19442,10 +19242,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "53": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4540,
       "endMs": 7670
@@ -19696,10 +19492,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "54": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4520,
       "endMs": 8590
@@ -19922,10 +19714,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "55": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4850,
       "endMs": 7470
@@ -20240,10 +20028,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "56": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4540,
       "endMs": 7270
@@ -20630,10 +20414,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "57": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4790,
       "endMs": 12110
@@ -20752,10 +20532,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "58": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4670,
       "endMs": 22080
@@ -20846,10 +20622,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "59": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4580,
       "endMs": 12180
@@ -20948,10 +20720,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "60": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4790,
       "endMs": 62290
@@ -21006,10 +20774,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "61": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4730,
       "endMs": 12710
@@ -21068,10 +20832,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "62": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4710,
       "endMs": 14020
@@ -21118,10 +20878,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "63": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4790,
       "endMs": 22710
@@ -21168,10 +20924,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "64": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4470,
       "endMs": 16320
@@ -21246,10 +20998,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "65": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4730,
       "endMs": 52040
@@ -21300,10 +21048,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "66": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4590,
       "endMs": 16720
@@ -21354,10 +21098,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "67": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4500,
       "endMs": 12320
@@ -21480,10 +21220,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "68": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4770,
       "endMs": 11090
@@ -21694,10 +21430,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "69": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4710,
       "endMs": 8440
@@ -21908,10 +21640,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "70": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4630,
       "endMs": 9730
@@ -22090,10 +21818,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "71": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4590,
       "endMs": 15080
@@ -22208,10 +21932,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "72": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4660,
       "endMs": 16660
@@ -22326,10 +22046,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "73": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4690,
       "endMs": 7680
@@ -22412,10 +22128,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "74": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4630,
       "endMs": 7210
@@ -22642,10 +22354,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "75": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4730,
       "endMs": 8110
@@ -22808,10 +22516,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "76": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4690,
       "endMs": 12550
@@ -22938,10 +22642,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "77": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4710,
       "endMs": 7030
@@ -23144,10 +22844,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "78": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4480,
       "endMs": 9590
@@ -23310,10 +23006,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "79": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4850,
       "endMs": 7760
@@ -23500,10 +23192,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "80": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4670,
       "endMs": 7290
@@ -23674,10 +23362,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "81": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4850,
       "endMs": 7210
@@ -23796,10 +23480,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "82": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4650,
       "endMs": 8250
@@ -23878,10 +23558,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "83": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4570,
       "endMs": 7630
@@ -24028,10 +23704,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "84": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4930,
       "endMs": 8570
@@ -24134,10 +23806,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "85": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4430,
       "endMs": 9160
@@ -24228,10 +23896,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "86": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4750,
       "endMs": 7870
@@ -24302,10 +23966,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "87": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4730,
       "endMs": 6920
@@ -24384,10 +24044,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "88": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4270,
       "endMs": 7420
@@ -24494,10 +24150,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "89": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 5210,
       "endMs": 6360
@@ -24620,10 +24272,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "90": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4710,
       "endMs": 7610
@@ -24706,10 +24354,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "91": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4610,
       "endMs": 6540
@@ -24772,10 +24416,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "92": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4630,
       "endMs": 6480
@@ -24862,10 +24502,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "93": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4590,
       "endMs": 5760
@@ -24912,10 +24548,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "94": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4730,
       "endMs": 7610
@@ -24950,10 +24582,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "95": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4670,
       "endMs": 7020
@@ -24988,10 +24616,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "96": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4750,
       "endMs": 8590
@@ -25070,10 +24694,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "97": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4670,
       "endMs": 10400
@@ -25096,10 +24716,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "98": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4490,
       "endMs": 14000
@@ -25134,10 +24750,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "99": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4410,
       "endMs": 7770
@@ -25172,10 +24784,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "100": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4710,
       "endMs": 7970
@@ -25222,10 +24830,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "101": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4450,
       "endMs": 5980
@@ -25272,10 +24876,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "102": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4670,
       "endMs": 7250
@@ -25310,10 +24910,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "103": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4090,
       "endMs": 5120
@@ -25328,10 +24924,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "104": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4910,
       "endMs": 8210
@@ -25370,10 +24962,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "105": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4610,
       "endMs": 10180
@@ -25396,10 +24984,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "106": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4870,
       "endMs": 7810
@@ -25418,10 +25002,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "107": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4770,
       "endMs": 7950
@@ -25452,10 +25032,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "108": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4550,
       "endMs": 8310
@@ -25470,10 +25046,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "109": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4770,
       "endMs": 7710
@@ -25500,10 +25072,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "110": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4770,
       "endMs": 9700
@@ -25518,10 +25086,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "111": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4410,
       "endMs": 9170
@@ -25544,10 +25108,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "112": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4530,
       "endMs": 6610
@@ -25566,10 +25126,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "113": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4550,
       "endMs": 7250
@@ -25592,10 +25148,6 @@ export const badrAlTurkiTimings: Record<number, Record<number, AyahTiming>> = {
     }
   },
   "114": {
-    "0": {
-      "startMs": 0,
-      "endMs": 4810
-    },
     "1": {
       "startMs": 4350,
       "endMs": 8570

@@ -42,7 +42,6 @@ const isStandaloneDisplay = () => window.matchMedia('(display-mode: standalone)'
   (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
 const BASMALA = '﷽';
-const firstAyahForSurah = (surah: number) => (surah === 9 ? 1 : 0);
 const toArabicNumerals = (value: number) => String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
 
 const scrollSelectedItem = (container: HTMLElement | null, selector: string) => {
@@ -248,7 +247,7 @@ function App() {
       longPressTriggered.current = false;
       return;
     }
-    dismissModal('surah', () => handleSelectAyah(surahNumber, firstAyahForSurah(surahNumber)));
+    dismissModal('surah', () => handleSelectAyah(surahNumber, 1));
   };
 
   const handleSurahHeaderClick = () => {
@@ -776,7 +775,7 @@ function App() {
                                 if (isEditingBookmarks) {
                                   handleToggleBookmark(surahNum);
                                 } else {
-                                  dismissModal('surah', () => handleSelectAyah(surahNum, firstAyahForSurah(surahNum)));
+                                  dismissModal('surah', () => handleSelectAyah(surahNum, 1));
                                 }
                               }}
                             >
