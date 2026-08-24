@@ -41,7 +41,7 @@ import './App.css';
 const isStandaloneDisplay = () => window.matchMedia('(display-mode: standalone)').matches ||
   (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
-const BASMALA = 'بِسْمِ ٱللّٰهِ ٱلرَّحْمٰنِ ٱلرَّحِيمِ';
+const BASMALA = '﷽';
 const firstAyahForSurah = (surah: number) => (surah === 9 ? 1 : 0);
 const toArabicNumerals = (value: number) => String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
 
