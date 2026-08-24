@@ -900,7 +900,7 @@ function App() {
                 </button>
               </div>
               <div className="dedication-credit" dir="rtl">
-                <span className="dedication-text">صدقة جارية عن روح والدي الراحل، علي المدني</span>
+                <span className="dedication-text">صدقة جارية عن روح والدي المرحوم علي المدني</span>
                 <span className="dedication-sub">رحمه الله رحمةً واسعة</span>
               </div>
 
