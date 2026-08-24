@@ -2,6 +2,7 @@ package com.samielmadani.quran
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
@@ -14,6 +15,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.DefaultMediaNotificationProvider
+import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
@@ -110,6 +112,18 @@ class QuranPlaybackService : MediaSessionService() {
         }
         mediaSession = MediaSession.Builder(this, player)
             .setSessionActivity(activityPendingIntent())
+            .setCustomLayout(
+                listOf(
+                    CommandButton.Builder(CommandButton.ICON_PREVIOUS)
+                        .setPlayerCommand(Player.COMMAND_SEEK_TO_PREVIOUS)
+                        .setDisplayName("Previous surah")
+                        .build(),
+                    CommandButton.Builder(CommandButton.ICON_NEXT)
+                        .setPlayerCommand(Player.COMMAND_SEEK_TO_NEXT)
+                        .setDisplayName("Next surah")
+                        .build(),
+                ),
+            )
             .setCallback(object : MediaSession.Callback {
                 override fun onConnect(
                     session: MediaSession,
@@ -136,15 +150,15 @@ class QuranPlaybackService : MediaSessionService() {
                     return when (playerCommand) {
                         Player.COMMAND_SEEK_TO_NEXT,
                         Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> {
-                            nextSurah()
+                            nextAyah()
                             SessionResult.RESULT_SUCCESS
                         }
                         Player.COMMAND_SEEK_TO_PREVIOUS,
                         Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> {
-                            previousSurah()
+                            previousAyah()
                             SessionResult.RESULT_SUCCESS
                         }
-                        else -> SessionResult.RESULT_INFO_SKIPPED
+                        else -> SessionResult.RESULT_SUCCESS
                     }
                 }
 
@@ -164,11 +178,11 @@ class QuranPlaybackService : MediaSessionService() {
                             return true
                         }
                         KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
-                            previousSurah()
+                            previousAyah()
                             return true
                         }
                         KeyEvent.KEYCODE_MEDIA_NEXT -> {
-                            nextSurah()
+                            nextAyah()
                             return true
                         }
                         MEDIA_REPEAT_KEY_CODE -> {
@@ -189,8 +203,8 @@ class QuranPlaybackService : MediaSessionService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_PLAY_PAUSE -> if (player.isPlaying) pause() else resume()
-            ACTION_PREVIOUS -> previousSurah()
-            ACTION_NEXT -> nextSurah()
+            ACTION_PREVIOUS -> previousAyah()
+            ACTION_NEXT -> nextAyah()
             else -> return super.onStartCommand(intent, flags, startId)
         }
         return START_STICKY
