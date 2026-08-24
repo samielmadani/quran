@@ -109,6 +109,7 @@ class QuranPlaybackService : MediaSessionService() {
             })
         }
         mediaSession = MediaSession.Builder(this, player)
+            .setSessionActivity(activityPendingIntent())
             .setCallback(object : MediaSession.Callback {
                 override fun onConnect(
                     session: MediaSession,
@@ -487,8 +488,11 @@ class QuranPlaybackService : MediaSessionService() {
             .setLargeIcon(android.graphics.BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
             .setContentTitle(metadata.title)
             .setContentText(metadata.artist)
+            .setContentIntent(activityPendingIntent())
+            .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOnlyAlertOnce(true)
+            .setShowWhen(false)
             .setOngoing(player.isPlaying)
             .addAction(
                 NotificationCompat.Action.Builder(
@@ -511,6 +515,16 @@ class QuranPlaybackService : MediaSessionService() {
                     nextIntent,
                 ).build(),
             )
+            .apply {
+                val durationMs = player.duration
+                if (durationMs > 0L) {
+                    setProgress(
+                        durationMs.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+                        player.currentPosition.coerceIn(0L, durationMs).coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+                        false,
+                    )
+                }
+            }
             .setStyle(
                 MediaStyleNotificationHelper.MediaStyle(mediaSession)
                     .setShowActionsInCompactView(0, 1, 2),
@@ -523,6 +537,13 @@ class QuranPlaybackService : MediaSessionService() {
             startForeground(NOTIFICATION_ID, notification)
         }
         NotificationManagerCompat.from(this).notify(NOTIFICATION_ID, notification)
+    }
+
+    private fun activityPendingIntent(): android.app.PendingIntent {
+        val intent = Intent(this, MainActivity::class.java)
+        val flags = android.app.PendingIntent.FLAG_UPDATE_CURRENT or
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) android.app.PendingIntent.FLAG_IMMUTABLE else 0
+        return android.app.PendingIntent.getActivity(this, 10, intent, flags)
     }
 
     private fun servicePendingIntent(action: String, requestCode: Int): android.app.PendingIntent {
@@ -538,6 +559,7 @@ class QuranPlaybackService : MediaSessionService() {
         val item = player.currentMediaItem ?: return
         if (item.mediaMetadata.title != metadata.title ||
             item.mediaMetadata.artist != metadata.artist ||
+            item.mediaMetadata.durationMs != metadata.durationMs ||
             item.mediaMetadata.artworkUri != metadata.artworkUri
         ) {
             player.replaceMediaItem(
@@ -551,6 +573,7 @@ class QuranPlaybackService : MediaSessionService() {
         .setTitle("Surah ${surahName(currentSurah)}")
         .setArtist(reciterName(activeReciterId))
         .setAlbumTitle("The Holy Quran")
+        .setDurationMs(player.duration.takeIf { it > 0L })
         .setArtworkUri(Uri.parse("android.resource://$packageName/${R.mipmap.ic_launcher}"))
         .build()
 
