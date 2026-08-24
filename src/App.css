@@ -2240,8 +2240,8 @@
   gap: 0.1rem;
   margin: -0.45rem 0 1.1rem;
   text-align: center;
-  opacity: 0.82;
+  padding-top: 0.9rem;
 }
 
-.dedication-credit .dedication-text { font-size: 0.92rem; }
-.dedication-credit .dedication-sub { font-size: 0.78rem; }
+.dedication-credit .dedication-text { font-size: 1.1rem; }
+.dedication-credit .dedication-sub { font-size: 0.95rem; }

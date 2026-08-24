@@ -171,7 +171,7 @@ function App() {
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    const backButtonListener = CapApp.addListener('backButton', async () => {
+    const handleNativeBackButton = async () => {
       if (overlayState.current.tafsir) {
         if (ayahInfoSelection) {
           setAyahInfoSelection(null);
@@ -199,11 +199,12 @@ function App() {
         return;
       }
       lastBackPress.current = now;
-      setShowExitPrompt(true);
-    });
+      // setShowExitPrompt(true);
+    };
+    window.addEventListener('nativeBackButton', handleNativeBackButton);
 
     return () => {
-      void backButtonListener.then((listener) => listener.remove());
+      window.removeEventListener('nativeBackButton', handleNativeBackButton);
     };
   }, [ayahInfoSelection, setReciterModalOpen, setSurahListOpen]);
 
@@ -611,7 +612,7 @@ function App() {
                   aria-label={swapPrevNext ? t.nextAyah : t.previousAyah}
                   title={swapPrevNext ? t.nextAyah : t.previousAyah}
                 >
-                  <IonIcon icon={swapPrevNext ? chevronForward : chevronBack} />
+                  <IonIcon icon={chevronBack} />
                 </button>
               )}
 
@@ -634,7 +635,7 @@ function App() {
                   aria-label={swapPrevNext ? t.previousAyah : t.nextAyah}
                   title={swapPrevNext ? t.previousAyah : t.nextAyah}
                 >
-                  <IonIcon icon={swapPrevNext ? chevronBack : chevronForward} />
+                  <IonIcon icon={chevronForward} />
                 </button>
               )}
             </div>
@@ -684,7 +685,7 @@ function App() {
           >
             {showPrevNext && (
               <button className="transport-button collapsed-transport-button" type="button" onClick={handleLeftNavClick} aria-label={swapPrevNext ? t.nextAyah : t.previousAyah}>
-                <IonIcon icon={swapPrevNext ? chevronForward : chevronBack} />
+                <IonIcon icon={chevronBack} />
               </button>
             )}
             <button className={`play-button collapsed-transport-play ${isPlaying ? 'is-playing' : ''}`} type="button" onClick={handlePlayPause} aria-label={isPlaying ? t.pause : t.play}>
@@ -692,7 +693,7 @@ function App() {
             </button>
             {showPrevNext && (
               <button className="transport-button collapsed-transport-button" type="button" onClick={handleRightNavClick} aria-label={swapPrevNext ? t.previousAyah : t.nextAyah}>
-                <IonIcon icon={swapPrevNext ? chevronBack : chevronForward} />
+                <IonIcon icon={chevronForward} />
               </button>
             )}
           </div>
@@ -899,7 +900,7 @@ function App() {
                 </button>
               </div>
               <div className="dedication-credit" dir="rtl">
-                <span className="dedication-text">إهداء إلى والدِي الراحل علي المدني، رحمه الله</span>
+                <span className="dedication-text">صدقة جارية عن روح والدي الراحل، علي المدني</span>
                 <span className="dedication-sub">رحمه الله رحمةً واسعة</span>
               </div>
 
