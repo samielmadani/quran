@@ -49,5 +49,9 @@ android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
 *.dex
 *.class
 
+# Deliberately committed public APK
+!artifacts/
+!artifacts/quran-latest.apk
+
 # Stray output file
 untracked_files.txt

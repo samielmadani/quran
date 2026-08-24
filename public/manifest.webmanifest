@@ -4,6 +4,7 @@
   "description": "The Holy Quran reader and recitation player with offline reciters and automotive media controls.",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
   "background_color": "#090b0e",
   "theme_color": "#090b0e",
   "orientation": "any",

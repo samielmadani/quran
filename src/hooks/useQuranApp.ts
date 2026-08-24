@@ -14,14 +14,14 @@ const DEFAULT_AYAH = 1;
 const UI_SETTINGS_STORAGE_KEY = 'quran_ui_settings';
 
 export const FONT_SIZE_PRESETS = [
-  { id: 'tiny', labelKey: 'fontTiny', size: 1.6 },
-  { id: 'xsmall', labelKey: 'fontExtraSmall', size: 1.9 },
-  { id: 'small', labelKey: 'fontSmall', size: 2.2 },
-  { id: 'medium', labelKey: 'fontMedium', size: 2.8 },
-  { id: 'large', labelKey: 'fontLarge', size: 3.4 },
-  { id: 'xlarge', labelKey: 'fontExtraLarge', size: 4.0 },
-  { id: 'huge', labelKey: 'fontHuge', size: 4.8 },
-  { id: 'massive', labelKey: 'fontMassive', size: 5.5 },
+  { id: 'tiny', labelKey: 'fontTiny', size: 1.3 },
+  { id: 'xsmall', labelKey: 'fontExtraSmall', size: 1.6 },
+  { id: 'small', labelKey: 'fontSmall', size: 1.8 },
+  { id: 'medium', labelKey: 'fontMedium', size: 1.9 },
+  { id: 'large', labelKey: 'fontLarge', size: 2.1 },
+  { id: 'xlarge', labelKey: 'fontExtraLarge', size: 2.4 },
+  { id: 'huge', labelKey: 'fontHuge', size: 2.8 },
+  { id: 'massive', labelKey: 'fontMassive', size: 3.2 },
 ];
 
 interface StoredUiSettings {
@@ -72,7 +72,7 @@ export function useQuranApp() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [positionMs, setPositionMs] = useState(0);
   const [durationMs, setDurationMs] = useState(0);
-  const [textSize, setTextSize] = useState(() => (typeof initialSettings.textSize === 'number' ? initialSettings.textSize : 2.8));
+  const [textSize, setTextSize] = useState(() => (typeof initialSettings.textSize === 'number' ? initialSettings.textSize : 1.9));
   const [autoScroll, setAutoScroll] = useState(() => (typeof initialSettings.autoScroll === 'boolean' ? initialSettings.autoScroll : true));
   const [pinned, setPinned] = useState(() => (typeof initialSettings.pinned === 'boolean' ? initialSettings.pinned : false));
   const [surahListOpen, setSurahListOpen] = useState(false);

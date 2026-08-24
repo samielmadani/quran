@@ -105,7 +105,7 @@ export function ReciterModal({
       isOpen={isOpen}
       onDidDismiss={onClose}
       breakpoints={[0, 0.16, 0.96, 1]}
-      initialBreakpoint={0.96}
+      initialBreakpoint={1}
       handle
       className="quran-sheet-modal"
       onDidPresent={() => {

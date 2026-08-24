@@ -36,7 +36,7 @@ export function AyahInfoModal({ isOpen, surah, ayahNumber, onClose }: AyahInfoMo
   }, [ayahNumber, isOpen, surah]);
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={onClose} breakpoints={[0, 0.16, 0.96, 1]} initialBreakpoint={0.96} handle className="quran-sheet-modal ayah-info-modal">
+    <IonModal isOpen={isOpen} onDidDismiss={onClose} breakpoints={[0, 0.16, 0.96, 1]} initialBreakpoint={1} handle className="quran-sheet-modal ayah-info-modal">
       <IonContent className="sheet-content">
         <div className="modal-surface ayah-info-surface" dir="ltr">
           <div className="modal-heading">

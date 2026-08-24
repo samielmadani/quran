@@ -1,5 +1,10 @@
 /// <reference types="vite/client" />
 
+interface BeforeInstallPromptEvent extends Event {
+	prompt: () => Promise<void>;
+	userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
 declare module 'ionicons/icons' {
 	export const close: string;
 	export const play: string;

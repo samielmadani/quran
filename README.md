@@ -45,11 +45,14 @@ npm run dev
 ## Production build
 
 ```bash
-cd "C:\Users\samie\source\repos\quran\android"
-npm run build
-npm run android:build
-.\gradlew.bat assembleDebug
+npm run build:apk
 ```
+
+The signed debug APK is copied to `artifacts/quran-latest.apk`. This file is intentionally committed so the public repository always contains an installable latest APK. Gradle's intermediate output remains ignored. For a production release APK, configure a private signing key through Gradle/GitHub Secrets.
+
+## Download the Android app
+
+GitHub Actions builds the APK on manual runs and for version tags matching `v*`. The latest committed APK is available at `artifacts/quran-latest.apk`; users can also download the `quran-latest-apk` workflow artifact or the APK attached to a tagged GitHub Release.
 
 ## Android run
 

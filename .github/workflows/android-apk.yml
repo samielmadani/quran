@@ -1,0 +1,40 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - run: chmod +x android/gradlew && android/gradlew assembleDebug
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/quran-latest.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quran-latest-apk
+          path: android/app/build/outputs/apk/debug/quran-latest.apk
+      - name: Upload tagged release asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/debug/quran-latest.apk
+          generate_release_notes: true

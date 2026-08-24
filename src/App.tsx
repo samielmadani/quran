@@ -38,6 +38,9 @@ import type { SleepTimerMode } from './types/audio';
 import { audioService } from './services/audioService';
 import './App.css';
 
+const isStandaloneDisplay = () => window.matchMedia('(display-mode: standalone)').matches ||
+  (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
 const BASMALA = '﷽';
 const firstAyahForSurah = (surah: number) => (surah === 9 ? 1 : 0);
 const toArabicNumerals = (value: number) => String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
@@ -132,6 +135,30 @@ function App() {
   const longPressTriggered = useRef(false);
   const lastBackPress = useRef(0);
   const overlayState = useRef({ tafsir: false, surah: false, reciter: false, settings: false });
+
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem('quran_install_dismissed') === 'true');
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform() || isStandaloneDisplay() || !window.matchMedia('(max-width: 768px)').matches) return;
+    const onBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const result = await installPrompt.userChoice;
+    if (result.outcome === 'dismissed') {
+      localStorage.setItem('quran_install_dismissed', 'true');
+      setInstallDismissed(true);
+    }
+    setInstallPrompt(null);
+  };
 
   useEffect(() => {
     overlayState.current = {
@@ -389,6 +416,20 @@ function App() {
         <IonContent fullscreen>
           <main className="reading-stage">
             {/* Subtle, Compact Continue Listening Banner */}
+            {installPrompt && !installDismissed && !isPlaying && (
+              <div className="install-prompt" role="dialog" aria-label="Install Quran App">
+                <div>
+                  <strong>Install Quran App</strong>
+                  <span>Add the Quran app to your home screen for a better experience.</span>
+                </div>
+                <button type="button" onClick={() => void handleInstall()}>Install</button>
+                <button type="button" className="install-dismiss" aria-label="Dismiss" onClick={() => {
+                  localStorage.setItem('quran_install_dismissed', 'true');
+                  setInstallDismissed(true);
+                }}>×</button>
+              </div>
+            )}
+
             {showContinueCard && lastSession && !isPlaying && (
               <ContinueListeningCard
                 surahNumber={lastSession.surah}
@@ -662,7 +703,7 @@ function App() {
           isOpen={surahListOpen}
           onDidDismiss={() => setSurahListOpen(false)}
           breakpoints={[0, 0.16, 0.96, 1]}
-          initialBreakpoint={0.96}
+          initialBreakpoint={1}
           handle
           className="quran-sheet-modal"
           onDidPresent={() => {
@@ -837,7 +878,7 @@ function App() {
           isOpen={settingsOpen}
           onDidDismiss={() => setSettingsOpen(false)}
           breakpoints={[0, 0.16, 0.96, 1]}
-          initialBreakpoint={0.96}
+          initialBreakpoint={1}
           handle
           className="quran-sheet-modal"
         >
@@ -856,6 +897,10 @@ function App() {
                 >
                   <IonIcon icon={close} />
                 </button>
+              </div>
+              <div className="dedication-credit" dir="rtl">
+                <span className="dedication-text">إهداء إلى والدِي الراحل علي المدني، رحمه الله</span>
+                <span className="dedication-sub">رحمه الله رحمةً واسعة</span>
               </div>
 
               <div className="settings-scroll-body">
@@ -1092,25 +1137,6 @@ function App() {
                   </div>
                 </div>
 
-                {/* 6. Subtle, Respectful Dedication to late father Ali Elmadani */}
-                <div className="father-dedication-card" dir="rtl">
-                  <div className="dedication-ornament">
-                    <span className="dedication-ornament-line" />
-                    <span className="dedication-ornament-gem">✦</span>
-                    <span className="dedication-ornament-line" />
-                  </div>
-                  <span className="dedication-text">
-                    إهداء إلى والدِي الراحل علي المدني، رحمه الله
-                  </span>
-                  <span className="dedication-sub">
-                    رحمه الله رحمةً واسعة
-                  </span>
-                  <div className="dedication-ornament">
-                    <span className="dedication-ornament-line" />
-                    <span className="dedication-ornament-gem">✦</span>
-                    <span className="dedication-ornament-line" />
-                  </div>
-                </div>
               </div>
             </div>
           </IonContent>

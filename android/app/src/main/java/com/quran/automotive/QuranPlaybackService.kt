@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.view.KeyEvent
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -39,6 +40,12 @@ class QuranPlaybackService : MediaSessionService() {
     private lateinit var player: ExoPlayer
     private lateinit var mediaSession: MediaSession
     private val handler = Handler(Looper.getMainLooper())
+    private val wakeLock by lazy {
+        (getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            "Quran::PlaybackScreen",
+        )
+    }
     private val statePreferences by lazy { getSharedPreferences("quran_playback", MODE_PRIVATE) }
     private val timingData = mutableMapOf<Int, Map<Int, AyahRange>>()
     private var currentSurah = 1
@@ -71,7 +78,10 @@ class QuranPlaybackService : MediaSessionService() {
                     }
                     emitState()
                 }
-                override fun onIsPlayingChanged(isPlaying: Boolean) = emitState()
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    updateWakeLock(isPlaying)
+                    emitState()
+                }
             })
         }
         mediaSession = MediaSession.Builder(this, player)
@@ -118,6 +128,7 @@ class QuranPlaybackService : MediaSessionService() {
         handler.removeCallbacks(positionPoller)
         persistState()
         eventListener = null
+        releaseWakeLock()
         mediaSession.release()
         player.release()
         instance = null
@@ -135,7 +146,9 @@ class QuranPlaybackService : MediaSessionService() {
         currentAyah = ayah
         val startMs = positionMs ?: range?.startMs ?: 0L
         pendingSeekMs = startMs
-        val mediaId = "${activeReciterId}_$surah"
+        val basmalaEndMs = timingData[1]?.get(1)?.startMs ?: 0L
+        val isBasmala = ayah == 0 && surah != 9 && timingData[surah]?.get(0) != null && basmalaEndMs > 0L
+        val mediaId = "${activeReciterId}_${surah}_${if (isBasmala) "basmala" else "ayah"}"
 
         if (player.currentMediaItem?.mediaId == mediaId) {
             player.seekTo(startMs)
@@ -145,7 +158,7 @@ class QuranPlaybackService : MediaSessionService() {
             return
         }
 
-        val mediaItem = resolveMediaItem(surah, ayah, mediaId)
+        val mediaItem = resolveMediaItem(surah, ayah, mediaId, isBasmala)
         if (mediaItem == null) {
             emitState()
             return
@@ -179,12 +192,13 @@ class QuranPlaybackService : MediaSessionService() {
         }
     }
 
-    private fun resolveMediaItem(surah: Int, ayah: Int, mediaId: String): MediaItem? {
-        val padded = String.format(Locale.US, "%03d.mp3", surah)
+    private fun resolveMediaItem(surah: Int, ayah: Int, mediaId: String, isBasmala: Boolean): MediaItem? {
+        val sourceSurah = if (isBasmala) 1 else surah
+        val padded = String.format(Locale.US, "%03d.mp3", sourceSurah)
         val metadata = MediaMetadata.Builder()
             .setTitle("Surah $surah — Ayah $ayah")
             .setArtist(activeReciterId)
-            .setAlbumTitle("The Holy Quran — القرآن الكريم")
+            .setAlbumTitle("The Holy Quran")
             .build()
         
         // 1. Check internal filesDir
@@ -194,6 +208,7 @@ class QuranPlaybackService : MediaSessionService() {
                 .setUri(Uri.fromFile(internalFile))
                 .setMediaId(mediaId)
                 .setMediaMetadata(metadata)
+                .setClippingConfiguration(clippingFor(isBasmala))
                 .build()
         }
 
@@ -206,16 +221,28 @@ class QuranPlaybackService : MediaSessionService() {
                     .setUri(Uri.fromFile(externalFile))
                     .setMediaId(mediaId)
                     .setMediaMetadata(metadata)
+                    .setClippingConfiguration(clippingFor(isBasmala))
                     .build()
             }
         }
 
         // 3. Fallback to remote streaming URL
-        val remoteUrl = getReciterUrl(activeReciterId, surah)
+        val remoteUrl = getReciterUrl(activeReciterId, sourceSurah)
         return MediaItem.Builder()
             .setUri(Uri.parse(remoteUrl))
             .setMediaId(mediaId)
             .setMediaMetadata(metadata)
+            .setClippingConfiguration(clippingFor(isBasmala))
+            .build()
+    }
+
+    private fun clippingFor(isBasmala: Boolean): MediaItem.ClippingConfiguration {
+        if (!isBasmala) return MediaItem.ClippingConfiguration.Builder().build()
+        val endMs = timingData[1]?.get(1)?.startMs ?: 0L
+        if (endMs <= 0L) return MediaItem.ClippingConfiguration.Builder().build()
+        return MediaItem.ClippingConfiguration.Builder()
+            .setStartPositionMs(0L)
+            .setEndPositionMs(endMs)
             .build()
     }
 
@@ -336,7 +363,38 @@ class QuranPlaybackService : MediaSessionService() {
     }
 
     private fun emitState() {
+        updateWakeLock(player.isPlaying)
+        updateSessionMetadata()
         eventListener?.invoke(state())
+    }
+
+    private fun updateSessionMetadata() {
+        if (!::mediaSession.isInitialized) return
+        val metadata = MediaMetadata.Builder()
+            .setTitle("Surah $currentSurah - Ayah $currentAyah")
+            .setArtist(activeReciterId)
+            .setAlbumTitle("The Holy Quran")
+            .setArtworkUri(Uri.parse("android.resource://$packageName/${R.mipmap.ic_launcher}"))
+            .build()
+        val item = player.currentMediaItem ?: return
+        if (item.mediaMetadata.title != metadata.title) {
+            player.replaceMediaItem(
+                player.currentMediaItemIndex,
+                item.buildUpon().setMediaMetadata(metadata).build(),
+            )
+        }
+    }
+
+    private fun updateWakeLock(playing: Boolean) {
+        if (playing) {
+            if (!wakeLock.isHeld) wakeLock.acquire()
+        } else {
+            releaseWakeLock()
+        }
+    }
+
+    private fun releaseWakeLock() {
+        if (wakeLock.isHeld) wakeLock.release()
     }
 
     private fun persistState() {

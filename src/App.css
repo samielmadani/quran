@@ -892,7 +892,7 @@
    Ionic Sheet Modals
    ========================================================================== */
 .quran-sheet-modal {
-  --height: 96dvh;
+  --height: 100dvh;
   --width: 100%;
   --border-radius: 24px 24px 0 0;
   --backdrop-opacity: 0.72;
@@ -2213,3 +2213,35 @@
   font-weight: 400;
   line-height: 1.4;
 }
+
+.install-prompt {
+  position: sticky;
+  top: max(0.4rem, env(safe-area-inset-top));
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: min(100%, 720px);
+  margin: 0.25rem auto 0.4rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(215, 174, 105, 0.28);
+  border-radius: 10px;
+  background: rgba(18, 22, 28, 0.96);
+  color: var(--text);
+}
+
+.install-prompt > div { display: grid; gap: 0.1rem; flex: 1; min-width: 0; }
+.install-prompt span { color: var(--muted); font-size: 0.75rem; }
+.install-prompt button { border: 0; border-radius: 6px; padding: 0.38rem 0.65rem; background: var(--gold); color: var(--ink); cursor: pointer; }
+.install-prompt .install-dismiss { padding: 0.2rem 0.4rem; background: transparent; color: var(--muted); }
+
+.dedication-credit {
+  display: grid;
+  gap: 0.1rem;
+  margin: -0.45rem 0 1.1rem;
+  text-align: center;
+  opacity: 0.82;
+}
+
+.dedication-credit .dedication-text { font-size: 0.92rem; }
+.dedication-credit .dedication-sub { font-size: 0.78rem; }

@@ -101,7 +101,7 @@ export function TafsirModal({ isOpen, surah, ayahNumber, mode = 'ayah', onClose 
   }, [isOpen, isSurahView, surah, ayahNumber, selectedSource]);
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={onClose} breakpoints={[0, 0.16, 0.96, 1]} initialBreakpoint={0.96} handle className="quran-sheet-modal tafsir-modal">
+    <IonModal isOpen={isOpen} onDidDismiss={onClose} breakpoints={[0, 0.16, 0.96, 1]} initialBreakpoint={1} handle className="quran-sheet-modal tafsir-modal">
       <IonContent className="sheet-content">
         <div className="modal-surface tafsir-surface" dir={selectedSource.language === 'ar' ? 'rtl' : 'ltr'}>
           <div className="modal-heading">
