@@ -19,7 +19,10 @@ import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
+import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
 import org.json.JSONObject
 import java.io.File
 import java.util.Locale
@@ -55,6 +58,8 @@ class QuranPlaybackService : MediaSessionService() {
 
     private lateinit var player: ExoPlayer
     private lateinit var mediaSession: MediaSession
+    private val previousAyahCommand = SessionCommand("com.samielmadani.quran.PREVIOUS_AYAH", Bundle.EMPTY)
+    private val nextAyahCommand = SessionCommand("com.samielmadani.quran.NEXT_AYAH", Bundle.EMPTY)
     private val handler = Handler(Looper.getMainLooper())
     private val statePreferences by lazy { getSharedPreferences("quran_playback", MODE_PRIVATE) }
     private val timingData = mutableMapOf<Int, Map<Int, AyahRange>>()
@@ -114,13 +119,13 @@ class QuranPlaybackService : MediaSessionService() {
             .setSessionActivity(activityPendingIntent())
             .setCustomLayout(
                 listOf(
-                    CommandButton.Builder(CommandButton.ICON_PREVIOUS)
-                        .setPlayerCommand(Player.COMMAND_SEEK_TO_PREVIOUS)
-                        .setDisplayName("Previous surah")
+                    CommandButton.Builder(CommandButton.ICON_SKIP_BACK)
+                        .setSessionCommand(previousAyahCommand)
+                        .setDisplayName("Previous ayah")
                         .build(),
-                    CommandButton.Builder(CommandButton.ICON_NEXT)
-                        .setPlayerCommand(Player.COMMAND_SEEK_TO_NEXT)
-                        .setDisplayName("Next surah")
+                    CommandButton.Builder(CommandButton.ICON_SKIP_FORWARD)
+                        .setSessionCommand(nextAyahCommand)
+                        .setDisplayName("Next ayah")
                         .build(),
                 ),
             )
@@ -136,10 +141,34 @@ class QuranPlaybackService : MediaSessionService() {
                         .add(Player.COMMAND_SEEK_TO_PREVIOUS)
                         .add(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
                         .build()
+                    val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS
+                        .buildUpon()
+                        .add(previousAyahCommand)
+                        .add(nextAyahCommand)
+                        .build()
                     return MediaSession.ConnectionResult.accept(
-                        MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS,
+                        sessionCommands,
                         commands,
                     )
+                }
+
+                override fun onCustomCommand(
+                    session: MediaSession,
+                    controllerInfo: MediaSession.ControllerInfo,
+                    customCommand: SessionCommand,
+                    args: Bundle,
+                ): ListenableFuture<SessionResult> {
+                    return when (customCommand) {
+                        previousAyahCommand -> {
+                            previousAyah()
+                            Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                        }
+                        nextAyahCommand -> {
+                            nextAyah()
+                            Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                        }
+                        else -> Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_NOT_SUPPORTED))
+                    }
                 }
 
                 override fun onPlayerCommandRequest(
@@ -255,9 +284,10 @@ class QuranPlaybackService : MediaSessionService() {
             return
         }
 
-        player.setMediaItem(mediaItem)
+        val previousPlaceholder = mediaItem.buildUpon().setMediaId("${mediaId}_previous").build()
+        val nextPlaceholder = mediaItem.buildUpon().setMediaId("${mediaId}_next").build()
+        player.setMediaItems(listOf(previousPlaceholder, mediaItem, nextPlaceholder), 1, startMs)
         player.prepare()
-        player.seekTo(startMs)
         player.play()
         persistState()
         emitState()
@@ -510,7 +540,7 @@ class QuranPlaybackService : MediaSessionService() {
             .setOngoing(player.isPlaying)
             .addAction(
                 NotificationCompat.Action.Builder(
-                    android.R.drawable.ic_media_previous,
+                    android.R.drawable.ic_media_rew,
                     "Previous",
                     previousIntent,
                 ).build(),
@@ -524,7 +554,7 @@ class QuranPlaybackService : MediaSessionService() {
             )
             .addAction(
                 NotificationCompat.Action.Builder(
-                    android.R.drawable.ic_media_next,
+                    android.R.drawable.ic_media_ff,
                     "Next",
                     nextIntent,
                 ).build(),
