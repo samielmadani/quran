@@ -1173,7 +1173,7 @@ function App() {
         />
 
         <IonToast
-          isOpen={showExitPrompt}
+          isOpen={false}
           message="Press back again to exit"
           duration={2000}
           position="bottom"
