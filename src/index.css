@@ -25,6 +25,10 @@ body,
   background: #090b0e;
 }
 
+html {
+  color-scheme: dark;
+}
+
 body {
   overscroll-behavior: none;
 }

@@ -41,7 +41,7 @@ import './App.css';
 const isStandaloneDisplay = () => window.matchMedia('(display-mode: standalone)').matches ||
   (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
-const BASMALA = '﷽';
+const BASMALA = 'بِسْمِ ٱللّٰهِ ٱلرَّحْمٰنِ ٱلرَّحِيمِ';
 const firstAyahForSurah = (surah: number) => (surah === 9 ? 1 : 0);
 const toArabicNumerals = (value: number) => String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
 
@@ -1128,7 +1128,7 @@ function App() {
                         <button
                           key={preset.id}
                           type="button"
-                          className={`driving-pill-btn ${Math.abs(textSize - preset.size) < 0.1 ? 'selected' : ''}`}
+                          className={`driving-pill-btn ${textSize === preset.size ? 'selected' : ''}`}
                           onClick={() => setTextSize(preset.size)}
                         >
                           {t[preset.labelKey as keyof typeof t] as string}
