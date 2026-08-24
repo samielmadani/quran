@@ -26,6 +26,7 @@ export interface QuranAudioApi {
   setActiveReciter: (request: { reciterId: string }) => Promise<{ success: boolean }>;
   getActiveReciter: () => Promise<{ reciterId: string }>;
   setTimingData: (request: { timingsJson: string }) => Promise<{ success: boolean }>;
+  setRepeatMode: (request: { mode: string }) => Promise<{ success: boolean }>;
 }
 
 export const QuranAudio = registerPlugin<QuranAudioApi>('QuranAudio', {
@@ -45,5 +46,6 @@ export const QuranAudio = registerPlugin<QuranAudioApi>('QuranAudio', {
     setActiveReciter: async () => ({ success: true }),
     getActiveReciter: async () => ({ reciterId: 'badr-al-turki' }),
     setTimingData: async () => ({ success: true }),
+    setRepeatMode: async () => ({ success: true }),
   }),
 });

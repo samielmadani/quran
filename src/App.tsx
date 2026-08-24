@@ -33,6 +33,7 @@ import { ReciterModal } from './components/ReciterModal';
 import { SurahHeader } from './components/SurahHeader';
 import { ContinueListeningCard } from './components/ContinueListeningCard';
 import { TafsirModal } from './components/TafsirModal';
+import { AyahInfoModal } from './components/AyahInfoModal';
 import type { SleepTimerMode } from './types/audio';
 import { audioService } from './services/audioService';
 import './App.css';
@@ -86,6 +87,7 @@ function App() {
     enableBookmarks,
     bookmarkedSurahs,
     repeatMode,
+    autoPlayOnLaunch,
     sleepTimerMode,
     sleepTimerRemainingSec,
     downloadProgress,
@@ -112,6 +114,7 @@ function App() {
     handleToggleSwapPrevNext,
     handleToggleShowRecentlyPlayed,
     handleToggleEnableBookmarks,
+    handleToggleAutoPlayOnLaunch,
     handleToggleBookmark,
   } = useQuranApp();
 
@@ -120,6 +123,7 @@ function App() {
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isEditingBookmarks, setIsEditingBookmarks] = useState(false);
   const [tafsirSelection, setTafsirSelection] = useState<{ surah: number; ayah: number | null } | null>(null);
+  const [ayahInfoSelection, setAyahInfoSelection] = useState<{ surah: number; ayah: number } | null>(null);
   const [showExitPrompt, setShowExitPrompt] = useState(false);
   const hideControlsTimer = useRef<number | undefined>(undefined);
   const swipeStartY = useRef<number | null>(null);
@@ -131,17 +135,21 @@ function App() {
 
   useEffect(() => {
     overlayState.current = {
-      tafsir: tafsirSelection !== null,
+      tafsir: tafsirSelection !== null || ayahInfoSelection !== null,
       surah: surahListOpen,
       reciter: reciterModalOpen,
       settings: settingsOpen,
     };
-  }, [reciterModalOpen, settingsOpen, surahListOpen, tafsirSelection]);
+  }, [ayahInfoSelection, reciterModalOpen, settingsOpen, surahListOpen, tafsirSelection]);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const backButtonListener = CapApp.addListener('backButton', async () => {
       if (overlayState.current.tafsir) {
+        if (ayahInfoSelection) {
+          setAyahInfoSelection(null);
+          return;
+        }
         setTafsirSelection(null);
         return;
       }
@@ -170,14 +178,14 @@ function App() {
     return () => {
       void backButtonListener.then((listener) => listener.remove());
     };
-  }, [setReciterModalOpen, setSurahListOpen]);
+  }, [ayahInfoSelection, setReciterModalOpen, setSurahListOpen]);
 
   const handleAyahPointerDown = (surahNumber: number, ayahNumber: number) => {
     longPressTriggered.current = false;
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current);
     longPressTimer.current = window.setTimeout(() => {
       longPressTriggered.current = true;
-      setTafsirSelection({ surah: surahNumber, ayah: ayahNumber });
+      setAyahInfoSelection({ surah: surahNumber, ayah: ayahNumber });
       longPressTimer.current = null;
     }, 500);
   };
@@ -517,16 +525,15 @@ function App() {
                 </button>
               )}
 
-              {/* Reciter Button */}
+              {/* Pin Button */}
               <button
-                className="reciter-live-chip"
+                className={`icon-button footer-pin-btn ${pinned ? 'is-pinned' : ''}`}
                 type="button"
-                onClick={openReciterSelector}
-                aria-label={`${activeReciter.name}, ${formatTimestamp(positionMs)}`}
-                title={`${activeReciter.name} • ${formatTimestamp(positionMs)}`}
+                onClick={handleTogglePinned}
+                aria-label={t.pinnedControls}
+                title={t.pinnedControls}
               >
-                <span className="reciter-chip-name">{language === 'ar' ? activeReciter.nameArabic : activeReciter.name}</span>
-                <span className="reciter-chip-time">{formatTimestamp(positionMs)}</span>
+                <IonIcon icon={pinned ? pin : pinOutline} />
               </button>
 
               {/* Settings Button */}
@@ -593,14 +600,16 @@ function App() {
 
             {/* Right Meta & Surah Selection */}
             <div className="toolbar-group toolbar-right">
+              {/* Reciter Button */}
               <button
-                className={`icon-button footer-pin-btn ${pinned ? 'is-pinned' : ''}`}
+                className="reciter-live-chip"
                 type="button"
-                onClick={handleTogglePinned}
-                aria-label={t.pinnedControls}
-                title={t.pinnedControls}
+                onClick={openReciterSelector}
+                aria-label={`${activeReciter.name}, ${formatTimestamp(positionMs)}`}
+                title={`${activeReciter.name} • ${formatTimestamp(positionMs)}`}
               >
-                <IonIcon icon={pinned ? pin : pinOutline} />
+                <span className="reciter-chip-name">{language === 'ar' ? activeReciter.nameArabic : activeReciter.name}</span>
+                <span className="reciter-chip-time">{formatTimestamp(positionMs)}</span>
               </button>
 
               <button
@@ -652,8 +661,8 @@ function App() {
         <IonModal
           isOpen={surahListOpen}
           onDidDismiss={() => setSurahListOpen(false)}
-          breakpoints={[0, 0.96, 1]}
-          initialBreakpoint={1}
+          breakpoints={[0, 0.16, 0.96, 1]}
+          initialBreakpoint={0.96}
           handle
           className="quran-sheet-modal"
           onDidPresent={() => {
@@ -827,8 +836,8 @@ function App() {
         <IonModal
           isOpen={settingsOpen}
           onDidDismiss={() => setSettingsOpen(false)}
-          breakpoints={[0, 0.96, 1]}
-          initialBreakpoint={1}
+          breakpoints={[0, 0.16, 0.96, 1]}
+          initialBreakpoint={0.96}
           handle
           className="quran-sheet-modal"
         >
@@ -1028,6 +1037,24 @@ function App() {
                     </button>
                   </div>
 
+                  {Capacitor.isNativePlatform() && (
+                    <div className="driving-row driving-row-with-description">
+                      <span className="driving-row-label">
+                        {t.autoPlayOnLaunch}
+                        <small>{t.autoPlayOnLaunchDescription}</small>
+                      </span>
+                      <button
+                        className={`toggle ${autoPlayOnLaunch ? 'on' : ''}`}
+                        type="button"
+                        onClick={handleToggleAutoPlayOnLaunch}
+                        aria-pressed={autoPlayOnLaunch}
+                        aria-label={t.autoPlayOnLaunch}
+                      >
+                        <span />
+                      </button>
+                    </div>
+                  )}
+
                   {/* Font Size Preset Options */}
                   <div className="driving-font-size-box">
                     <div className="driving-section-header">
@@ -1109,6 +1136,13 @@ function App() {
           surah={tafsirSelection ? surahs.find((item) => item.number === tafsirSelection.surah) : undefined}
           ayahNumber={tafsirSelection?.ayah ?? null}
           onClose={() => setTafsirSelection(null)}
+        />
+
+        <AyahInfoModal
+          isOpen={ayahInfoSelection !== null}
+          surah={ayahInfoSelection ? surahs.find((item) => item.number === ayahInfoSelection.surah) : undefined}
+          ayahNumber={ayahInfoSelection?.ayah ?? null}
+          onClose={() => setAyahInfoSelection(null)}
         />
 
         <IonToast

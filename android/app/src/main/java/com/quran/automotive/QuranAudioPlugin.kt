@@ -128,6 +128,16 @@ class QuranAudioPlugin : Plugin() {
     }
 
     @PluginMethod
+    fun setRepeatMode(call: PluginCall) {
+        val mode = call.getString("mode")
+        if (mode.isNullOrEmpty()) {
+            call.reject("mode is required")
+            return
+        }
+        withService(call) { service -> service.setRepeatMode(mode) }
+    }
+
+    @PluginMethod
     fun getDownloadedSurahs(call: PluginCall) {
         val reciterId = call.getString("reciterId")
         if (reciterId.isNullOrEmpty()) {

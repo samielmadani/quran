@@ -171,11 +171,15 @@ export class AudioService {
         await QuranAudio.initialize();
         await QuranAudio.setActiveReciter({ reciterId: this.activeReciterId });
         await this.syncNativeTimingData(this.activeReciterId);
+        await QuranAudio.setRepeatMode({ mode: this.repeatMode });
         const state = await QuranAudio.getState();
         if (state.playing || !lastSession) {
           this.applyNativeState(state);
         } else {
           this.notify();
+        }
+        if (!lastSession && (state.positionMs > 2000 || state.ayah > 1 || state.surah > 1)) {
+          await this.persistState();
         }
         await QuranAudio.addListener('playbackStateChanged', (nextState) => {
           this.applyNativeState({
@@ -540,6 +544,9 @@ export class AudioService {
 
   setRepeatMode(mode: RepeatMode) {
     this.repeatMode = mode;
+    if (Capacitor.isNativePlatform()) {
+      void QuranAudio.setRepeatMode({ mode });
+    }
     this.notify();
     void this.saveSettings();
   }
@@ -780,8 +787,14 @@ export class AudioService {
     }
 
     // Continuous advance to next surah
-    const nextSurah = this.currentSurah < 114 ? this.currentSurah + 1 : 1;
-    await this.playAyah({ surah: nextSurah, ayah: firstAyahForSurah(nextSurah) });
+    if (this.currentSurah < 114) {
+      const nextSurah = this.currentSurah + 1;
+      await this.playAyah({ surah: nextSurah, ayah: firstAyahForSurah(nextSurah) });
+    } else {
+      this.playing = false;
+      this.notify();
+      await this.persistState();
+    }
   }
 
   getState(): PlaybackState {

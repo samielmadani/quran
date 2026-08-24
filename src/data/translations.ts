@@ -60,6 +60,8 @@ export interface Translations {
   showRecentlyPlayed: string;
   enableBookmarks: string;
   autoScroll: string;
+  autoPlayOnLaunch: string;
+  autoPlayOnLaunchDescription: string;
   fontSize: string;
   
   // Sleep Timer Options
@@ -152,6 +154,8 @@ export const translations: Record<AppLanguage, Translations> = {
     showRecentlyPlayed: 'Show Recently Played',
     enableBookmarks: 'Enable Bookmarks',
     autoScroll: 'Auto-scroll',
+    autoPlayOnLaunch: 'Auto-play on app launch',
+    autoPlayOnLaunchDescription: 'Automatically resume Quran playback when the native Android app launches.',
     fontSize: 'Font Size',
     
     timerOff: 'Off',
@@ -239,6 +243,8 @@ export const translations: Record<AppLanguage, Translations> = {
     showRecentlyPlayed: 'عرض السور المستمع إليها مؤخراً',
     enableBookmarks: 'تفعيل المفضلة',
     autoScroll: 'التمرير التلقائي مع التلاوة',
+    autoPlayOnLaunch: 'التشغيل التلقائي عند فتح التطبيق',
+    autoPlayOnLaunchDescription: 'استئناف تلاوة القرآن تلقائياً عند فتح تطبيق أندرويد الأصلي.',
     fontSize: 'حجم الخط',
     
     timerOff: 'إيقاف',

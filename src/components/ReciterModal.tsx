@@ -104,8 +104,8 @@ export function ReciterModal({
     <IonModal
       isOpen={isOpen}
       onDidDismiss={onClose}
-      breakpoints={[0, 0.96, 1]}
-      initialBreakpoint={1}
+      breakpoints={[0, 0.16, 0.96, 1]}
+      initialBreakpoint={0.96}
       handle
       className="quran-sheet-modal"
       onDidPresent={() => {

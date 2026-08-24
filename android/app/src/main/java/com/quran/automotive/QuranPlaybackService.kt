@@ -39,24 +39,35 @@ class QuranPlaybackService : MediaSessionService() {
     private lateinit var player: ExoPlayer
     private lateinit var mediaSession: MediaSession
     private val handler = Handler(Looper.getMainLooper())
+    private val statePreferences by lazy { getSharedPreferences("quran_playback", MODE_PRIVATE) }
     private val timingData = mutableMapOf<Int, Map<Int, AyahRange>>()
     private var currentSurah = 1
     private var currentAyah = 1
     private var pendingSeekMs: Long? = null
     private var eventListener: ((NativePlaybackState) -> Unit)? = null
     private var repeatSingle = false
+    private var repeatMode = "continuous"
     var activeReciterId: String = "badr-al-turki"
+        set(value) {
+            field = value
+            if (::player.isInitialized) persistState()
+        }
 
     override fun onCreate() {
         super.onCreate()
         instance = this
+        restorePersistedState()
         loadTimingData()
         player = ExoPlayer.Builder(this).build().apply {
             addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     if (playbackState == Player.STATE_READY) applyPendingSeek()
-                    if (playbackState == Player.STATE_ENDED && repeatSingle) {
-                        playAyah(currentSurah, currentAyah)
+                    if (playbackState == Player.STATE_ENDED) {
+                        if (repeatSingle) {
+                            playAyah(currentSurah, currentAyah, 0L)
+                        } else {
+                            advanceToNextAyah()
+                        }
                     }
                     emitState()
                 }
@@ -105,6 +116,7 @@ class QuranPlaybackService : MediaSessionService() {
 
     override fun onDestroy() {
         handler.removeCallbacks(positionPoller)
+        persistState()
         eventListener = null
         mediaSession.release()
         player.release()
@@ -128,6 +140,7 @@ class QuranPlaybackService : MediaSessionService() {
         if (player.currentMediaItem?.mediaId == mediaId) {
             player.seekTo(startMs)
             player.play()
+            persistState()
             emitState()
             return
         }
@@ -142,6 +155,7 @@ class QuranPlaybackService : MediaSessionService() {
         player.prepare()
         player.seekTo(startMs)
         player.play()
+        persistState()
         emitState()
     }
 
@@ -205,7 +219,10 @@ class QuranPlaybackService : MediaSessionService() {
             .build()
     }
 
-    fun pause() = player.pause()
+    fun pause() {
+        player.pause()
+        persistState()
+    }
 
     fun resume() {
         if (player.currentMediaItem == null) {
@@ -213,19 +230,55 @@ class QuranPlaybackService : MediaSessionService() {
         } else {
             player.play()
         }
+        persistState()
     }
 
     fun nextAyah() {
+        advanceToNextAyah()
+    }
+
+    fun setRepeatMode(mode: String) {
+        repeatMode = mode
+        repeatSingle = mode == "repeat_single"
+        statePreferences.edit().putString("repeatMode", mode).apply()
+    }
+
+    private fun advanceToNextAyah() {
+        if (repeatMode == "off") {
+            player.pause()
+            emitState()
+            return
+        }
+        if (repeatMode == "repeat_surah") {
+            playAyah(currentSurah, if (currentSurah == 9) 1 else timingData[currentSurah]?.keys?.filter { it > 0 }?.minOrNull() ?: 1, 0L)
+            return
+        }
         val next = currentAyah + 1
         if (timingData[currentSurah]?.containsKey(next) == true) {
             playAyah(currentSurah, next)
+            return
+        }
+
+        val nextSurah = currentSurah + 1
+        if (nextSurah <= 114 && timingData[nextSurah] != null) {
+            val firstAyah = if (nextSurah == 9) 1 else timingData[nextSurah]!!.keys.filter { it > 0 }.minOrNull() ?: 1
+            playAyah(nextSurah, firstAyah)
+        } else {
+            player.pause()
+            emitState()
         }
     }
 
     fun previousAyah() {
-        val previous = (currentAyah - 1).coerceAtLeast(1)
-        if (timingData[currentSurah]?.containsKey(previous) == true) {
-            playAyah(currentSurah, previous)
+        if (currentAyah > 1 && timingData[currentSurah]?.containsKey(currentAyah - 1) == true) {
+            playAyah(currentSurah, currentAyah - 1)
+            return
+        }
+
+        val previousSurah = currentSurah - 1
+        if (previousSurah >= 1 && timingData[previousSurah] != null) {
+            val lastAyah = timingData[previousSurah]!!.keys.filter { it > 0 }.maxOrNull()
+            if (lastAyah != null) playAyah(previousSurah, lastAyah)
         }
     }
 
@@ -277,12 +330,31 @@ class QuranPlaybackService : MediaSessionService() {
                 currentAyah = ayah
             }
             emitState()
+            persistState()
             handler.postDelayed(this, 250)
         }
     }
 
     private fun emitState() {
         eventListener?.invoke(state())
+    }
+
+    private fun persistState() {
+        statePreferences.edit()
+            .putInt("surah", currentSurah)
+            .putInt("ayah", currentAyah)
+            .putLong("positionMs", player.currentPosition.coerceAtLeast(0))
+            .putString("reciterId", activeReciterId)
+            .apply()
+    }
+
+    private fun restorePersistedState() {
+        currentSurah = statePreferences.getInt("surah", 1)
+        currentAyah = statePreferences.getInt("ayah", 1)
+        activeReciterId = statePreferences.getString("reciterId", "badr-al-turki") ?: "badr-al-turki"
+        pendingSeekMs = statePreferences.getLong("positionMs", 0L)
+        repeatMode = statePreferences.getString("repeatMode", "continuous") ?: "continuous"
+        repeatSingle = repeatMode == "repeat_single"
     }
 
     private fun applyPendingSeek() {
