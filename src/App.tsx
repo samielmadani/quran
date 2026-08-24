@@ -127,7 +127,7 @@ function App() {
   const [isEditingBookmarks, setIsEditingBookmarks] = useState(false);
   const [tafsirSelection, setTafsirSelection] = useState<{ surah: number; ayah: number | null } | null>(null);
   const [ayahInfoSelection, setAyahInfoSelection] = useState<{ surah: number; ayah: number } | null>(null);
-  const [showExitPrompt, setShowExitPrompt] = useState(false);
+  const [, setShowExitPrompt] = useState(false);
   const hideControlsTimer = useRef<number | undefined>(undefined);
   const swipeStartY = useRef<number | null>(null);
   const surahListRef = useRef<HTMLDivElement | null>(null);
