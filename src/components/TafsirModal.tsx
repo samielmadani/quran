@@ -34,13 +34,32 @@ const TAFSIR_PREFERENCE_KEY = 'quran_tafsir_preferences';
 const getSavedSourceId = () => {
   try {
     const saved = JSON.parse(localStorage.getItem(TAFSIR_PREFERENCE_KEY) || '{}') as { sourceId?: number };
-    return typeof saved.sourceId === 'number' ? saved.sourceId : 169;
+    return typeof saved.sourceId === 'number' ? saved.sourceId : 168;
   } catch {
-    return 169;
+    return 168;
   }
 };
 
-const stripMarkup = (value: string) => value.replace(/<[^>]+>/g, '').trim();
+const sanitizeTafsirMarkup = (value: string) => {
+  const document = new DOMParser().parseFromString(value, 'text/html');
+  document.querySelectorAll('script, style, iframe, object, embed, link').forEach((element) => element.remove());
+  document.body.querySelectorAll('*').forEach((element) => {
+    Array.from(element.attributes).forEach((attribute) => {
+      if (attribute.name !== 'style') {
+        element.removeAttribute(attribute.name);
+        return;
+      }
+
+      const allowedStyles = attribute.value
+        .split(';')
+        .filter((declaration) => /^(font-size|font-weight|font-style|text-align|direction)\s*:/i.test(declaration))
+        .join(';');
+      if (allowedStyles) element.setAttribute('style', allowedStyles);
+      else element.removeAttribute('style');
+    });
+  });
+  return document.body.innerHTML.trim();
+};
 
 export function TafsirModal({ isOpen, surah, ayahNumber, mode = 'ayah', onClose }: TafsirModalProps) {
   const [text, setText] = useState('');
@@ -87,7 +106,7 @@ export function TafsirModal({ isOpen, surah, ayahNumber, mode = 'ayah', onClose 
         if (isSurahView) {
           setEntries(data.tafsirs?.filter((entry) => entry.text && entry.verse_key) ?? []);
         } else {
-          setText(stripMarkup(data.tafsir?.text ?? ''));
+          setText(sanitizeTafsirMarkup(data.tafsir?.text ?? ''));
         }
       })
       .catch((error: unknown) => {
@@ -136,7 +155,7 @@ export function TafsirModal({ isOpen, surah, ayahNumber, mode = 'ayah', onClose 
                 {isLoading ? <p>Loading {selectedSource.name}...</p> : entries.length > 0 ? entries.map((entry) => (
                   <section key={entry.verse_key} className="tafsir-entry">
                     <h3>{entry.verse_key}</h3>
-                    <p>{stripMarkup(entry.text ?? '')}</p>
+                    <div className="tafsir-entry-content" dangerouslySetInnerHTML={{ __html: sanitizeTafsirMarkup(entry.text ?? '') }} />
                   </section>
                 )) : <p>{selectedSource.name} data is unavailable for Surah {surah?.number}.</p>}
               </div>
@@ -145,7 +164,7 @@ export function TafsirModal({ isOpen, surah, ayahNumber, mode = 'ayah', onClose 
             <>
               {ayah && <p className="tafsir-ayah-text" dir="rtl">{ayah.text}</p>}
               <div className="tafsir-body">
-                {isLoading ? <p>Loading {selectedSource.name}...</p> : <p>{text || `${selectedSource.name} data is unavailable for ${surah?.number}:${ayahNumber}.`}</p>}
+                {isLoading ? <p>Loading {selectedSource.name}...</p> : text ? <div dangerouslySetInnerHTML={{ __html: text }} /> : <p>{`${selectedSource.name} data is unavailable for ${surah?.number}:${ayahNumber}.`}</p>}
               </div>
             </>
           )}

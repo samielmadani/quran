@@ -15,6 +15,7 @@ export interface Reciter {
   description?: string;
   totalSurahs: number;
   audioUrlPattern: (surahNumber: number) => string;
+  ayahAudioUrlPattern?: (surahNumber: number, ayahNumber: number) => string;
   timings?: Record<number, Record<number, AyahTiming>>;
   approxSizeBytes?: number;
 }
@@ -89,6 +90,8 @@ export const RECITERS: Reciter[] = [
     totalSurahs: 114,
     audioUrlPattern: (surahNumber: number) =>
       `https://server12.mp3quran.net/maher/${String(surahNumber).padStart(3, '0')}.mp3`,
+    ayahAudioUrlPattern: (surahNumber, ayahNumber) =>
+      `https://everyayah.com/data/MaherAlMuaiqly128kbps/${String(surahNumber).padStart(3, '0')}${String(ayahNumber).padStart(3, '0')}.mp3`,
     approxSizeBytes: 900000000,
   },
   {
@@ -100,6 +103,8 @@ export const RECITERS: Reciter[] = [
     totalSurahs: 114,
     audioUrlPattern: (surahNumber: number) =>
       `https://server11.mp3quran.net/yasser/${String(surahNumber).padStart(3, '0')}.mp3`,
+    ayahAudioUrlPattern: (surahNumber, ayahNumber) =>
+      `https://everyayah.com/data/Yasser_Ad-Dussary_128kbps/${String(surahNumber).padStart(3, '0')}${String(ayahNumber).padStart(3, '0')}.mp3`,
     approxSizeBytes: 900000000,
   },
   {
@@ -111,6 +116,8 @@ export const RECITERS: Reciter[] = [
     totalSurahs: 114,
     audioUrlPattern: (surahNumber: number) =>
       `https://server7.mp3quran.net/s_gmd/${String(surahNumber).padStart(3, '0')}.mp3`,
+    ayahAudioUrlPattern: (surahNumber, ayahNumber) =>
+      `https://everyayah.com/data/Ghamadi_40kbps/${String(surahNumber).padStart(3, '0')}${String(ayahNumber).padStart(3, '0')}.mp3`,
     approxSizeBytes: 900000000,
   },
   {
@@ -134,6 +141,8 @@ export const RECITERS: Reciter[] = [
     totalSurahs: 114,
     audioUrlPattern: (surahNumber: number) =>
       `https://server6.mp3quran.net/qtm/${String(surahNumber).padStart(3, '0')}.mp3`,
+    ayahAudioUrlPattern: (surahNumber, ayahNumber) =>
+      `https://everyayah.com/data/Nasser_Alqatami_128kbps/${String(surahNumber).padStart(3, '0')}${String(ayahNumber).padStart(3, '0')}.mp3`,
     approxSizeBytes: 900000000,
   },
   {
@@ -145,6 +154,8 @@ export const RECITERS: Reciter[] = [
     totalSurahs: 114,
     audioUrlPattern: (surahNumber: number) =>
       `https://server13.mp3quran.net/jhn/${String(surahNumber).padStart(3, '0')}.mp3`,
+    ayahAudioUrlPattern: (surahNumber, ayahNumber) =>
+      `https://everyayah.com/data/Abdullaah_3awwaad_Al-Juhaynee_128kbps/${String(surahNumber).padStart(3, '0')}${String(ayahNumber).padStart(3, '0')}.mp3`,
     approxSizeBytes: 900000000,
   },
   {
@@ -168,17 +179,8 @@ export const RECITERS: Reciter[] = [
     totalSurahs: 114,
     audioUrlPattern: (surahNumber: number) =>
       `https://server8.mp3quran.net/frs_a/${String(surahNumber).padStart(3, '0')}.mp3`,
-    approxSizeBytes: 900000000,
-  },
-  {
-    id: 'ahmed-al-ajmi',
-    name: 'Ahmed Al-Ajmi',
-    nameArabic: 'أحمد العجمي',
-    style: 'Murattal',
-    description: 'Clear Murattal recitation by Sheikh Ahmed Al-Ajmi.',
-    totalSurahs: 114,
-    audioUrlPattern: (surahNumber: number) =>
-      `https://server10.mp3quran.net/ajm/${String(surahNumber).padStart(3, '0')}.mp3`,
+    ayahAudioUrlPattern: (surahNumber, ayahNumber) =>
+      `https://everyayah.com/data/Fares_Abbad_64kbps/${String(surahNumber).padStart(3, '0')}${String(ayahNumber).padStart(3, '0')}.mp3`,
     approxSizeBytes: 900000000,
   },
 ];

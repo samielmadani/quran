@@ -293,8 +293,32 @@ class QuranPlaybackService : MediaSessionService() {
         emitState()
     }
 
-    private fun getReciterUrl(reciterId: String, surah: Int): String {
+    private fun isPerAyahReciter(reciterId: String): Boolean {
+        return reciterId in setOf(
+            "maher-al-muaiqly",
+            "yasser-al-dosari",
+            "saad-al-ghamdi",
+            "nasser-al-qatami",
+            "abdullah-awad-al-juhany",
+            "fares-abbad",
+        )
+    }
+
+    private fun getReciterUrl(reciterId: String, surah: Int, ayah: Int): String {
         val padded = String.format(Locale.US, "%03d", surah)
+        val ayahPadded = "$padded${String.format(Locale.US, "%03d", ayah)}"
+        if (isPerAyahReciter(reciterId)) {
+            val folder = when (reciterId) {
+                "maher-al-muaiqly" -> "MaherAlMuaiqly128kbps"
+                "yasser-al-dosari" -> "Yasser_Ad-Dussary_128kbps"
+                "saad-al-ghamdi" -> "Ghamadi_40kbps"
+                "nasser-al-qatami" -> "Nasser_Alqatami_128kbps"
+                "abdullah-awad-al-juhany" -> "Abdullaah_3awwaad_Al-Juhaynee_128kbps"
+                "fares-abbad" -> "Fares_Abbad_64kbps"
+                else -> return ""
+            }
+            return "https://everyayah.com/data/$folder/$ayahPadded.mp3"
+        }
         return when (reciterId) {
             "mishari-alafasy" -> "https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/$surah.mp3"
             "mahmoud-al-husary" -> "https://download.quranicaudio.com/qdc/khalil_al_husary/murattal/$surah.mp3"
@@ -308,14 +332,17 @@ class QuranPlaybackService : MediaSessionService() {
             "abdullah-awad-al-juhany" -> "https://server13.mp3quran.net/jhn/$padded.mp3"
             "abdul-rahman-al-sudais" -> "https://download.quranicaudio.com/qdc/abdurrahmaan_as_sudais/murattal/$surah.mp3"
             "fares-abbad" -> "https://server8.mp3quran.net/frs_a/$padded.mp3"
-            "ahmed-al-ajmi" -> "https://server10.mp3quran.net/ajm/$padded.mp3"
             else -> "https://server10.mp3quran.net/bader/Rewayat-Hafs-A-n-Assem/$padded.mp3"
         }
     }
 
     private fun resolveMediaItem(surah: Int, ayah: Int, mediaId: String): MediaItem? {
         val sourceSurah = surah
-        val padded = String.format(Locale.US, "%03d.mp3", sourceSurah)
+        val padded = if (isPerAyahReciter(activeReciterId)) {
+            String.format(Locale.US, "%03d%03d.mp3", sourceSurah, ayah)
+        } else {
+            String.format(Locale.US, "%03d.mp3", sourceSurah)
+        }
         val metadata = MediaMetadata.Builder()
             .setTitle("Surah $surah — Ayah $ayah")
             .setArtist(activeReciterId)
@@ -346,7 +373,7 @@ class QuranPlaybackService : MediaSessionService() {
         }
 
         // 3. Fallback to remote streaming URL
-        val remoteUrl = getReciterUrl(activeReciterId, sourceSurah)
+        val remoteUrl = getReciterUrl(activeReciterId, sourceSurah, ayah)
         return MediaItem.Builder()
             .setUri(Uri.parse(remoteUrl))
             .setMediaId(mediaId)
@@ -406,13 +433,13 @@ class QuranPlaybackService : MediaSessionService() {
             return
         }
         val next = currentAyah + 1
-        if (timingData[currentSurah]?.containsKey(next) == true) {
+        if (isPerAyahReciter(activeReciterId) || timingData[currentSurah]?.containsKey(next) == true) {
             playAyah(currentSurah, next)
             return
         }
 
         val nextSurah = currentSurah + 1
-        if (nextSurah <= 114 && timingData[nextSurah] != null) {
+        if (nextSurah <= 114 && (isPerAyahReciter(activeReciterId) || timingData[nextSurah] != null)) {
             playAyah(nextSurah, 1)
         } else {
             player.pause()
@@ -421,13 +448,13 @@ class QuranPlaybackService : MediaSessionService() {
     }
 
     fun previousAyah() {
-        if (currentAyah > 1 && timingData[currentSurah]?.containsKey(currentAyah - 1) == true) {
+        if (currentAyah > 1 && (isPerAyahReciter(activeReciterId) || timingData[currentSurah]?.containsKey(currentAyah - 1) == true)) {
             playAyah(currentSurah, currentAyah - 1)
             return
         }
 
         val previousSurah = currentSurah - 1
-        if (previousSurah >= 1 && timingData[previousSurah] != null) {
+        if (previousSurah >= 1 && (isPerAyahReciter(activeReciterId) || timingData[previousSurah] != null)) {
             val lastAyah = timingData[previousSurah]!!.keys.filter { it > 0 }.maxOrNull()
             if (lastAyah != null) playAyah(previousSurah, lastAyah)
         }

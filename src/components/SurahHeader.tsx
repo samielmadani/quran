@@ -5,9 +5,10 @@ interface SurahHeaderProps {
   surah: Surah;
   onOpenSurahPicker?: () => void;
   onSurahClick?: () => void;
+  onOpenTafsir?: () => void;
 }
 
-export function SurahHeader({ surah, onOpenSurahPicker, onSurahClick }: SurahHeaderProps) {
+export function SurahHeader({ surah, onOpenSurahPicker, onSurahClick, onOpenTafsir }: SurahHeaderProps) {
   const juz = getSurahJuzNumber(surah.number);
   const isMeccan = surah.type?.toLowerCase().includes('mecc') || surah.type?.toLowerCase().includes('makk');
   const revelationLabel = isMeccan ? 'Meccan • مكية' : 'Medinan • مدنية';
@@ -46,6 +47,18 @@ export function SurahHeader({ surah, onOpenSurahPicker, onSurahClick }: SurahHea
         <span className="ornament-diamond">◆</span>
         <span className="ornament-line" />
       </div>
+      <button
+        id="tutorial-tafsir"
+        className="surah-tafsir-button"
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onOpenTafsir?.();
+        }}
+        aria-label={`Read Tafsir for ${surah.englishName}`}
+      >
+                <span>Tafsir (Exegesis)</span>
+      </button>
     </header>
   );
 }

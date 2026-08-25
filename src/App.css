@@ -285,6 +285,34 @@
   font-weight: 600;
 }
 
+.surah-tafsir-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  margin-top: 0.15rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgba(215, 174, 105, 0.35);
+  border-radius: 10px;
+  background: rgba(190, 167, 116, 0.06);
+  color: var(--muted);
+  cursor: pointer;
+  font: 600 0.8rem/1 'DM Sans', 'Segoe UI', sans-serif;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.surah-tafsir-button ion-icon {
+  font-size: 1rem;
+}
+
+.surah-tafsir-button:hover,
+.surah-tafsir-button:focus-visible {
+  border-color: rgba(215, 174, 105, 0.35);
+  background: rgba(215, 174, 105, 0.14);
+  color: var(--text);
+}
+
 /* ==========================================================================
    Bismillah Header & Quran Text Flow
    ========================================================================== */
@@ -444,7 +472,7 @@
   transform: rotate(45deg);
 }
 
-.tutorial-popover.above::after {
+.tutorial-popover.above::before {
   top: -0.55rem;
   bottom: auto;
   transform: rotate(225deg);
@@ -1228,8 +1256,10 @@
 }
 
 .tafsir-body > p,
-.tafsir-entry p {
+.tafsir-entry p,
+.tafsir-entry-content {
   margin: 0 0 1.25rem;
+  white-space: pre-line;
 }
 
 .tafsir-surah-body {

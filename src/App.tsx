@@ -239,6 +239,10 @@ function App() {
     openSurahSelector();
   };
 
+  const handleOpenSurahTafsir = () => {
+    setTafsirSelection({ surah: surah.number, ayah: null });
+  };
+
   const scheduleControlsHide = useCallback(() => {
     window.clearTimeout(hideControlsTimer.current);
     if (isPlaying && !pinned) {
@@ -307,7 +311,7 @@ function App() {
       .then((data) => {
         const next: Record<number, string> = {};
         for (const verse of data.verses ?? []) {
-          const text = verse.translations?.[0]?.text?.replace(/<[^>]+>/g, '').trim();
+          const text = verse.translations?.[0]?.text;
           if (text) next[verse.verse_number] = cleanTranslationText(text);
         }
         setAyahTranslations(next);
@@ -451,6 +455,7 @@ function App() {
                 surah={surah}
                 onOpenSurahPicker={openSurahSelector}
                 onSurahClick={handleSurahHeaderClick}
+                onOpenTafsir={handleOpenSurahTafsir}
               />
 
               <div className={`quran-flow ${translationMode ? 'translation-mode' : ''}`} dir="rtl" style={{ fontSize: `${textSize}rem` }}>

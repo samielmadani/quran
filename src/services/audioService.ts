@@ -141,7 +141,9 @@ export class AudioService {
       this.audio.addEventListener('ended', () => {
         this.stopProgressLoop();
         updatePositionAndDuration();
-        void this.handleAudioEnded();
+        void (getReciterById(this.activeReciterId).ayahAudioUrlPattern
+          ? this.handleAyahAudioEnded()
+          : this.handleAudioEnded());
       });
     }
 
@@ -275,7 +277,9 @@ export class AudioService {
         startMs = reciter.timings[surah][1].startMs;
       }
 
-      await this.loadSurahAudio(surah);
+      await (reciter.ayahAudioUrlPattern
+        ? this.loadAyahAudio(surah, ayah)
+        : this.loadSurahAudio(surah));
       if (requestId !== this.reciterSwitchRequestId) {
         return;
       }
@@ -351,7 +355,9 @@ export class AudioService {
         startMs = reciter.timings[payload.surah][1].startMs;
       }
 
-      await this.loadSurahAudio(payload.surah);
+      await (reciter.ayahAudioUrlPattern
+        ? this.loadAyahAudio(payload.surah, payload.ayah)
+        : this.loadSurahAudio(payload.surah));
       if (requestId !== this.playbackRequestId) {
         return;
       }
@@ -440,10 +446,14 @@ export class AudioService {
     }
 
     if (this.audio) {
-      const key = `${this.activeReciterId}_${this.currentSurah}`;
+      const reciter = getReciterById(this.activeReciterId);
+      const key = reciter.ayahAudioUrlPattern
+        ? `${this.activeReciterId}_${this.currentSurah}_${this.currentAyah}`
+        : `${this.activeReciterId}_${this.currentSurah}`;
       if (!this.audio.src || this.currentAudioKey !== key) {
-        await this.loadSurahAudio(this.currentSurah);
-        const reciter = getReciterById(this.activeReciterId);
+        await (reciter.ayahAudioUrlPattern
+          ? this.loadAyahAudio(this.currentSurah, this.currentAyah)
+          : this.loadSurahAudio(this.currentSurah));
         const timing = reciter.timings?.[this.currentSurah]?.[this.currentAyah];
         if (timing && this.currentPositionMs < timing.startMs) {
           this.currentPositionMs = timing.startMs;
@@ -517,7 +527,9 @@ export class AudioService {
     if (this.audio) {
       this.audio.currentTime = this.currentPositionMs / 1000;
     }
-    const ayah = this.findAyahAt(this.currentPositionMs);
+    const ayah = getReciterById(this.activeReciterId).ayahAudioUrlPattern
+      ? undefined
+      : this.findAyahAt(this.currentPositionMs);
     if (ayah !== undefined && ayah !== this.currentAyah) {
       this.currentAyah = ayah;
     }
@@ -796,6 +808,21 @@ export class AudioService {
     }
   }
 
+  private async handleAyahAudioEnded() {
+    if (this.sleepTimerMode === 'end_of_ayah' || this.repeatMode === 'off') {
+      this.playing = false;
+      this.sleepTimerMode = 'off';
+      this.notify();
+      await this.persistState();
+      return;
+    }
+    if (this.repeatMode === 'repeat_single') {
+      await this.playAyah({ surah: this.currentSurah, ayah: this.currentAyah, positionMs: 0 });
+      return;
+    }
+    await this.nextAyah();
+  }
+
   getState(): PlaybackState {
     return {
       playing: this.playing,
@@ -862,6 +889,19 @@ export class AudioService {
     this.audio.pause();
     this.pendingSeekMs = null;
     this.audio.src = source;
+    this.currentAudioKey = key;
+    this.audio.load();
+  }
+
+  private async loadAyahAudio(surah: number, ayah: number) {
+    if (!this.audio) return;
+    const reciter = getReciterById(this.activeReciterId);
+    if (!reciter.ayahAudioUrlPattern) return;
+    const key = `${this.activeReciterId}_${surah}_${ayah}`;
+    if (this.currentAudioKey === key && this.audio.src && this.audio.readyState >= 1) return;
+    this.audio.pause();
+    this.pendingSeekMs = null;
+    this.audio.src = reciter.ayahAudioUrlPattern(surah, ayah);
     this.currentAudioKey = key;
     this.audio.load();
   }

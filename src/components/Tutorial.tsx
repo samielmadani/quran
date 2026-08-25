@@ -1,6 +1,6 @@
 import { IonIcon } from '@ionic/react';
 import { chevronForward, close } from 'ionicons/icons';
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
 interface TutorialProps {
   onComplete: () => void;
@@ -8,6 +8,7 @@ interface TutorialProps {
 
 const tips = [
   ['tutorial-surah-selector', 'Choose a Surah (Chapter)', 'Choose a chapter from the header or player footer.'],
+  ['tutorial-tafsir', 'Read the Tafsir', 'Read the explanation of the currently selected Surah.'],
   ['tutorial-reciter-selector', 'Choose your reciter', 'Pick a reciter and download audio for offline listening.'],
   ['tutorial-play', 'Play the recitation', 'Start or pause the current ayah. Previous and next move through the recitation.'],
   ['tutorial-settings', 'Open Settings', 'Adjust reading, translation, repeat, and playback preferences.'],
@@ -18,27 +19,36 @@ export function Tutorial({ onComplete }: TutorialProps) {
   const isLast = step === tips.length - 1;
   const [targetId, title, message] = tips[step];
   const [position, setPosition] = useState({ top: 0, left: 16, arrowLeft: 24, placement: 'below' });
+  const popoverRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const updatePosition = () => {
       const target = document.getElementById(targetId);
       if (!target) return;
       const rect = target.getBoundingClientRect();
+      const popoverHeight = popoverRef.current?.offsetHeight ?? 150;
       const width = Math.min(352, window.innerWidth - 32);
       const left = Math.max(16, Math.min(window.innerWidth - width - 16, rect.left + rect.width / 2 - width / 2));
       const belowTop = rect.bottom + 18;
-      const aboveTop = rect.top - 168;
-      const placement = belowTop + 150 <= window.innerHeight || aboveTop < 16 ? 'below' : 'above';
-      const top = placement === 'below' ? belowTop : aboveTop;
+      const aboveTop = rect.top - popoverHeight - 18;
+      const placement = belowTop + popoverHeight <= window.innerHeight || aboveTop < 16 ? 'below' : 'above';
+      const top = placement === 'below'
+        ? Math.min(belowTop, window.innerHeight - popoverHeight - 16)
+        : Math.max(16, aboveTop);
       setPosition({ top, left, arrowLeft: Math.max(18, Math.min(width - 18, rect.left + rect.width / 2 - left)), placement });
       target.classList.add('tutorial-target');
     };
+    const observer = new ResizeObserver(updatePosition);
+    const target = document.getElementById(targetId);
+    if (target) observer.observe(target);
+    if (popoverRef.current) observer.observe(popoverRef.current);
     updatePosition();
     window.addEventListener('resize', updatePosition);
     window.addEventListener('orientationchange', updatePosition);
     window.addEventListener('scroll', updatePosition, true);
     return () => {
       document.getElementById(targetId)?.classList.remove('tutorial-target');
+      observer.disconnect();
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('orientationchange', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
@@ -49,6 +59,7 @@ export function Tutorial({ onComplete }: TutorialProps) {
     <>
       <div className="tutorial-backdrop" aria-hidden="true" />
       <div
+        ref={popoverRef}
         className={`tutorial-popover ${position.placement}`}
         role="dialog"
         aria-label="Quran controls tutorial"
