@@ -12,16 +12,17 @@ import type { PlaybackState, RecentItem, RepeatMode, SleepTimerMode } from '../t
 const DEFAULT_SURAH = 1;
 const DEFAULT_AYAH = 1;
 const UI_SETTINGS_STORAGE_KEY = 'quran_ui_settings';
+const clampTextSize = (value: number) => Math.min(3, Math.max(0.6, value));
 
 export const FONT_SIZE_PRESETS = [
-  { id: 'tiny', labelKey: 'fontTiny', size: 1.3 },
-  { id: 'xsmall', labelKey: 'fontExtraSmall', size: 1.6 },
-  { id: 'small', labelKey: 'fontSmall', size: 1.8 },
+  { id: 'tiny', labelKey: 'fontTiny', size: 0.6 },
+  { id: 'xsmall', labelKey: 'fontExtraSmall', size: 0.9 },
+  { id: 'small', labelKey: 'fontSmall', size: 1.3 },
   { id: 'medium', labelKey: 'fontMedium', size: 1.9 },
-  { id: 'large', labelKey: 'fontLarge', size: 2.1 },
-  { id: 'xlarge', labelKey: 'fontExtraLarge', size: 2.4 },
+  { id: 'large', labelKey: 'fontLarge', size: 2.2 },
+  { id: 'xlarge', labelKey: 'fontExtraLarge', size: 2.5 },
   { id: 'huge', labelKey: 'fontHuge', size: 2.8 },
-  { id: 'massive', labelKey: 'fontMassive', size: 3.2 },
+  { id: 'massive', labelKey: 'fontMassive', size: 3.0 },
 ];
 
 interface StoredUiSettings {
@@ -36,6 +37,8 @@ interface StoredUiSettings {
   bookmarkedSurahs?: number[];
   repeatMode?: RepeatMode;
   autoPlayOnLaunch?: boolean;
+  translationMode?: boolean;
+  autoPlayOnSurahSelection?: boolean;
 }
 
 function getStoredUiSettings(): StoredUiSettings {
@@ -72,9 +75,9 @@ export function useQuranApp() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [positionMs, setPositionMs] = useState(0);
   const [durationMs, setDurationMs] = useState(0);
-  const [textSize, setTextSize] = useState(() => (typeof initialSettings.textSize === 'number' ? initialSettings.textSize : 1.9));
+  const [textSize, setTextSize] = useState(() => (typeof initialSettings.textSize === 'number' ? clampTextSize(initialSettings.textSize) : 1.9));
   const [autoScroll, setAutoScroll] = useState(() => (typeof initialSettings.autoScroll === 'boolean' ? initialSettings.autoScroll : true));
-  const [pinned, setPinned] = useState(() => (typeof initialSettings.pinned === 'boolean' ? initialSettings.pinned : false));
+  const [pinned, setPinned] = useState(() => (typeof initialSettings.pinned === 'boolean' ? initialSettings.pinned : true));
   const [surahListOpen, setSurahListOpen] = useState(false);
   const [reciterModalOpen, setReciterModalOpen] = useState(false);
   const [isFirstStartup, setIsFirstStartup] = useState(false);
@@ -88,6 +91,8 @@ export function useQuranApp() {
   const [bookmarkedSurahs, setBookmarkedSurahs] = useState<number[]>(() => (Array.isArray(initialSettings.bookmarkedSurahs) ? initialSettings.bookmarkedSurahs : [1, 18, 36, 55, 67, 112]));
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('continuous');
   const [autoPlayOnLaunch, setAutoPlayOnLaunch] = useState(() => initialSettings.autoPlayOnLaunch === true);
+  const [translationMode, setTranslationMode] = useState(() => initialSettings.translationMode !== false);
+  const [autoPlayOnSurahSelection, setAutoPlayOnSurahSelection] = useState(() => initialSettings.autoPlayOnSurahSelection === true);
   const [sleepTimerMode, setSleepTimerMode] = useState<SleepTimerMode>('off');
   const [sleepTimerRemainingSec, setSleepTimerRemainingSec] = useState<number | null>(null);
 
@@ -122,6 +127,8 @@ export function useQuranApp() {
         bookmarkedSurahs,
         repeatMode,
         autoPlayOnLaunch,
+        translationMode,
+        autoPlayOnSurahSelection,
         ...updates,
       };
       const json = JSON.stringify(current);
@@ -133,7 +140,7 @@ export function useQuranApp() {
     } catch {
       // Ignore
     }
-  }, [language, pinned, showPrevNext, swapPrevNext, textSize, autoScroll, showRecentlyPlayed, enableBookmarks, bookmarkedSurahs, repeatMode, autoPlayOnLaunch]);
+  }, [language, pinned, showPrevNext, swapPrevNext, textSize, autoScroll, showRecentlyPlayed, enableBookmarks, bookmarkedSurahs, repeatMode, autoPlayOnLaunch, translationMode, autoPlayOnSurahSelection]);
 
   // Subscribe to audio player changes
   useEffect(() => {
@@ -157,7 +164,7 @@ export function useQuranApp() {
       if (typeof s.pinned === 'boolean') setPinned(s.pinned);
       if (typeof s.showPrevNext === 'boolean') setShowPrevNext(s.showPrevNext);
       if (typeof s.swapPrevNext === 'boolean') setSwapPrevNext(s.swapPrevNext);
-      if (typeof s.textSize === 'number') setTextSize(s.textSize);
+      if (typeof s.textSize === 'number') setTextSize(clampTextSize(s.textSize));
       if (typeof s.autoScroll === 'boolean') setAutoScroll(s.autoScroll);
       if (typeof s.showRecentlyPlayed === 'boolean') setShowRecentlyPlayed(s.showRecentlyPlayed);
       if (typeof s.enableBookmarks === 'boolean') setEnableBookmarks(s.enableBookmarks);
@@ -167,6 +174,8 @@ export function useQuranApp() {
         audioService.setRepeatMode(s.repeatMode);
       }
       if (typeof s.autoPlayOnLaunch === 'boolean') setAutoPlayOnLaunch(s.autoPlayOnLaunch);
+      if (typeof s.translationMode === 'boolean') setTranslationMode(s.translationMode);
+      if (typeof s.autoPlayOnSurahSelection === 'boolean') setAutoPlayOnSurahSelection(s.autoPlayOnSurahSelection);
 
       await audioService.initialize();
       const currentReciter = await reciterStorage.getActiveReciterId();
@@ -248,6 +257,17 @@ export function useQuranApp() {
     setCurrentAyah(ayahNumber);
     setShowContinueCard(false);
     void audioService.playAyah({ surah: surahNumber, ayah: ayahNumber });
+  };
+
+  const handleSelectSurah = (surahNumber: number, ayahNumber = 1) => {
+    setCurrentSurah(surahNumber);
+    setCurrentAyah(ayahNumber);
+    setShowContinueCard(false);
+    if (autoPlayOnSurahSelection) {
+      void audioService.playAyah({ surah: surahNumber, ayah: ayahNumber });
+    } else {
+      void audioService.selectAyah({ surah: surahNumber, ayah: ayahNumber });
+    }
   };
 
   const handlePlayPause = async () => {
@@ -355,7 +375,7 @@ export function useQuranApp() {
 
   const handleSetTextSize = (value: number | ((prev: number) => number)) => {
     setTextSize((prev) => {
-      const next = typeof value === 'function' ? value(prev) : value;
+      const next = clampTextSize(typeof value === 'function' ? value(prev) : value);
       saveUiSettings({ textSize: next });
       return next;
     });
@@ -373,6 +393,22 @@ export function useQuranApp() {
     setAutoPlayOnLaunch((value) => {
       const next = !value;
       saveUiSettings({ autoPlayOnLaunch: next });
+      return next;
+    });
+  };
+
+  const handleToggleTranslationMode = () => {
+    setTranslationMode((value) => {
+      const next = !value;
+      saveUiSettings({ translationMode: next });
+      return next;
+    });
+  };
+
+  const handleToggleAutoPlayOnSurahSelection = () => {
+    setAutoPlayOnSurahSelection((value) => {
+      const next = !value;
+      saveUiSettings({ autoPlayOnSurahSelection: next });
       return next;
     });
   };
@@ -406,6 +442,8 @@ export function useQuranApp() {
     bookmarkedSurahs,
     repeatMode,
     autoPlayOnLaunch,
+    translationMode,
+    autoPlayOnSurahSelection,
     sleepTimerMode,
     sleepTimerRemainingSec,
     downloadProgress,
@@ -423,6 +461,7 @@ export function useQuranApp() {
     setCurrentAyah,
     setShowContinueCard,
     handleSelectAyah,
+    handleSelectSurah,
     handlePlayPause,
     handleNextAyah,
     handlePreviousAyah,
@@ -437,6 +476,8 @@ export function useQuranApp() {
     handleToggleShowRecentlyPlayed,
     handleToggleEnableBookmarks,
     handleToggleAutoPlayOnLaunch,
+    handleToggleTranslationMode,
+    handleToggleAutoPlayOnSurahSelection,
     handleToggleBookmark,
   };
 }

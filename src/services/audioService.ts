@@ -381,6 +381,11 @@ export class AudioService {
     await this.persistState();
   }
 
+  async selectAyah(payload: AudioPlaybackRequest): Promise<void> {
+    await this.playAyah(payload);
+    await this.pause();
+  }
+
   async resumeAtSavedPosition(): Promise<void> {
     const session = await this.getLastSession();
     if (session) {
@@ -976,7 +981,7 @@ export class AudioService {
       const reciter = getReciterById(this.activeReciterId);
 
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: `${surahData.nameTransliteration} (${surahData.nameArabic}) — Ayah ${this.currentAyah}`,
+        title: `${surahData.englishName} (${surahData.nameTransliteration}) — Ayah (Verse) ${this.currentAyah}`,
         artist: `${reciter.name} (${reciter.nameArabic})`,
         album: 'The Holy Quran - القرآن الكريم',
         artwork: [

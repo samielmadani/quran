@@ -102,8 +102,11 @@ class QuranPlaybackService : MediaSessionService() {
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     if (playbackState == Player.STATE_READY) applyPendingSeek()
                     if (playbackState == Player.STATE_ENDED) {
-                        if (repeatSingle) {
+                        if (this@QuranPlaybackService.repeatMode == "repeat_single") {
                             playAyah(currentSurah, currentAyah, 0L)
+                        } else if (this@QuranPlaybackService.repeatMode == "off") {
+                            player.pause()
+                            emitState()
                         } else {
                             advanceToNextAyah()
                         }

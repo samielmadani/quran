@@ -114,7 +114,7 @@ export function ReciterModal({
           if (!selected) return;
           const itemRect = selected.getBoundingClientRect();
           if (itemRect.top >= 0 && itemRect.bottom <= window.innerHeight) return;
-          selected.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          selected.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior });
         });
       }}
     >

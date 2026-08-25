@@ -8,10 +8,17 @@
     <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#090b0e" />
-    <style>html, body, #root { background: #090b0e; color: #f5f1e8; }</style>
+    <style>
+      html, body, #root { background: #090b0e; color: #f5f1e8; }
+      #startup-splash { position: fixed; inset: 0; z-index: 999; display: grid; place-items: center; background: #090b0e; transition: opacity .25s ease; }
+      #startup-splash.hidden { opacity: 0; pointer-events: none; }
+      #startup-splash-mark { color: #d7ae69; font: 700 2.5rem Georgia, serif; animation: startup-pulse 1.2s ease-in-out infinite alternate; }
+      @keyframes startup-pulse { from { opacity: .55; transform: scale(.98); } to { opacity: 1; transform: scale(1); } }
+    </style>
     <title>The Holy Quran — القرآن الكريم</title>
   </head>
   <body>
+    <div id="startup-splash" aria-hidden="true"><span id="startup-splash-mark">﷽</span></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

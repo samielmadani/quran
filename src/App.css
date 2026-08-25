@@ -241,11 +241,19 @@
 }
 
 .surah-transliteration {
-  color: var(--text);
+  order: 2;
+  color: var(--muted);
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
-  font-size: 1.05rem;
+  font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+.surah-english-name {
+  margin-top: 0.1rem;
+  order: 1;
+  color: var(--text);
+  font-weight: 700;
 }
 
 .surah-header-badges {
@@ -295,6 +303,16 @@
   padding: 0.3rem 1.2rem;
   text-align: center;
   border-radius: 14px;
+}
+
+.basmala-ayah.translation-ayah {
+  align-items: center;
+  min-width: min(100%, 30rem);
+}
+
+.basmala-translation {
+  max-width: 100%;
+  text-align: center;
 }
 
 .basmala-calligraphy {
@@ -377,6 +395,95 @@
   background: var(--gold);
   color: var(--ink);
 }
+
+.quran-flow.translation-mode {
+  text-align: start;
+}
+
+.ayah.translation-ayah {
+  display: block;
+  margin: 0.55rem 0;
+  padding: 0.35rem 0.5rem 0.5rem;
+  text-align: right;
+}
+
+.ayah-translation {
+  display: block;
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size: 0.52em;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.tutorial-popover {
+  position: fixed;
+  bottom: auto;
+  z-index: 30;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(215, 174, 105, 0.55);
+  border-radius: 12px;
+  background: #171d24;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  color: var(--text);
+}
+
+.tutorial-popover::after {
+  content: '';
+  position: absolute;
+  left: var(--tutorial-arrow-left);
+  right: auto;
+  bottom: -0.55rem;
+  width: 1rem;
+  height: 1rem;
+  border-right: 1px solid rgba(215, 174, 105, 0.55);
+  border-bottom: 1px solid rgba(215, 174, 105, 0.55);
+  background: #171d24;
+  transform: rotate(45deg);
+}
+
+.tutorial-popover.above::after {
+  top: -0.55rem;
+  bottom: auto;
+  transform: rotate(225deg);
+}
+
+.tutorial-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  background: rgba(0, 0, 0, 0.16);
+  pointer-events: none;
+}
+
+.tutorial-target {
+  position: relative;
+  z-index: 31;
+}
+
+.tutorial-close {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+.tutorial-step {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--gold);
+  font: 700 0.68rem 'DM Sans', sans-serif;
+  text-transform: uppercase;
+}
+
+.tutorial-popover strong { display: block; font-size: 1rem; }
+.tutorial-popover p { margin: 0.35rem 0 0.8rem; color: var(--muted); font: 0.84rem/1.45 'DM Sans', sans-serif; }
+.tutorial-next { display: inline-flex; align-items: center; gap: 0.25rem; border: 0; background: transparent; color: var(--gold); font-weight: 700; }
 
 /* ==========================================================================
    Full Player & Bottom Footer (Responsive Grid & Safe Insets)
@@ -774,6 +881,18 @@
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
   font-size: 0.72rem;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.surah-heading-english {
+  margin-top: 0.15rem;
+  color: var(--text);
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1347,10 +1466,11 @@
 }
 
 .surah-option {
-  display: flex;
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr) minmax(4.25rem, auto);
   align-items: center;
   direction: ltr;
-  min-height: 68px;
+  min-height: 86px;
   width: 100%;
   gap: 0.8rem;
   padding: 0.75rem 0.95rem;
@@ -1398,6 +1518,10 @@
 }
 
 .surah-index-number {
+  display: grid;
+  min-width: 0;
+  align-self: stretch;
+  place-items: center;
   color: var(--gold);
   font-size: 0.74rem;
   font-weight: 700;
@@ -1410,6 +1534,8 @@
   flex: 1;
   flex-direction: column;
   gap: 0.15rem;
+  align-self: center;
+  overflow: hidden;
 }
 
 .surah-option-copy strong {
@@ -1417,21 +1543,41 @@
   font-size: 1.3rem;
   font-weight: 400;
   text-align: right;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.surah-option-english {
+  color: var(--text);
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: right;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .surah-option-copy small {
-  overflow: hidden;
   color: var(--muted);
   font-size: 0.72rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.recent-chip-transliteration {
+  color: var(--muted);
+  font-size: 0.65rem;
 }
 
 .surah-option-count {
+  align-self: center;
+  min-width: 0;
+  text-align: right;
   color: var(--muted);
   font-size: 0.68rem;
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  line-height: 1.25;
 }
 
 /* ==========================================================================

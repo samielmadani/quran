@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { IonContent, IonIcon, IonModal } from '@ionic/react';
 import { close } from 'ionicons/icons';
 import type { Surah } from '../data/quranData';
+import { cleanTranslationText } from '../services/translationService';
 
 type AyahInfoModalProps = {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export function AyahInfoModal({ isOpen, surah, ayahNumber, onClose }: AyahInfoMo
       .then(async (response) => {
         if (!response.ok) throw new Error('Translation request failed');
         const data = await response.json() as { verse?: { translations?: Array<{ text?: string }> } };
-        setTranslation((data.verse?.translations?.[0]?.text ?? '').replace(/<[^>]+>/g, '').trim());
+        setTranslation(cleanTranslationText(data.verse?.translations?.[0]?.text ?? ''));
       })
       .catch((error: unknown) => {
         if ((error as { name?: string }).name !== 'AbortError') setTranslation('Translation could not be loaded.');
@@ -40,12 +41,12 @@ export function AyahInfoModal({ isOpen, surah, ayahNumber, onClose }: AyahInfoMo
       <IonContent className="sheet-content">
         <div className="modal-surface ayah-info-surface" dir="ltr">
           <div className="modal-heading">
-            <h2>{surah?.nameTransliteration} {ayahNumber}</h2>
+            <h2>{surah?.englishName} ({surah?.nameTransliteration}) · Ayah (Verse) {ayahNumber}</h2>
             <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
               <IonIcon icon={close} />
             </button>
           </div>
-          <div className="ayah-info-meta">Surah {surah?.number} · Ayah {ayahNumber}</div>
+          <div className="ayah-info-meta">Surah (Chapter) {surah?.number} · Ayah (Verse) {ayahNumber}</div>
           <p className="ayah-info-arabic" dir="rtl">{ayah?.text}</p>
           <div className="ayah-info-translation">
             <strong>English translation</strong>

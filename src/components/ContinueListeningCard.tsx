@@ -41,7 +41,7 @@ export function ContinueListeningCard({
         type="button"
         className="continue-main-pill"
         onClick={onContinue}
-        aria-label={`Continue listening to ${surah.nameTransliteration} ${ayahNumber}`}
+        aria-label={`Continue listening to ${surah.englishName} (${surah.nameTransliteration}), Ayah (Verse) ${ayahNumber}`}
       >
         <span className="continue-play-dot">
           <IonIcon icon={play} />
@@ -50,7 +50,7 @@ export function ContinueListeningCard({
           {language === 'ar' ? 'متابعة الاستماع:' : 'Continue:'}
         </span>
         <strong className="continue-surah-title">
-          {language === 'ar' ? `${surah.nameArabic} • آية ${ayahNumber}` : `${surah.nameTransliteration} • Ayah ${ayahNumber}`}
+          {language === 'ar' ? `${surah.nameArabic} • آية ${ayahNumber}` : `${surah.englishName} (${surah.nameTransliteration}) • Ayah (Verse) ${ayahNumber}`}
         </strong>
         <span className="continue-timestamp">
           ({formatTimestamp(positionMs)})

@@ -105,7 +105,7 @@ export function TafsirModal({ isOpen, surah, ayahNumber, mode = 'ayah', onClose 
       <IonContent className="sheet-content">
         <div className="modal-surface tafsir-surface" dir={selectedSource.language === 'ar' ? 'rtl' : 'ltr'}>
           <div className="modal-heading">
-            <h2>{isSurahView ? surah?.nameTransliteration : `${surah?.nameTransliteration} ${ayahNumber}`}</h2>
+            <h2>{isSurahView ? `${surah?.englishName} (${surah?.nameTransliteration})` : `${surah?.englishName} (${surah?.nameTransliteration}) · Ayah (Verse) ${ayahNumber}`}</h2>
             <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
               <IonIcon icon={close} />
             </button>

@@ -4,15 +4,10 @@ import { getSurahJuzNumber } from '../data/juzData';
 interface SurahHeaderProps {
   surah: Surah;
   onOpenSurahPicker?: () => void;
-  onLongPressStart?: () => void;
-  onLongPressEnd?: () => void;
   onSurahClick?: () => void;
 }
 
-const toArabicNumerals = (value: number) =>
-  String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
-
-export function SurahHeader({ surah, onOpenSurahPicker, onLongPressStart, onLongPressEnd, onSurahClick }: SurahHeaderProps) {
+export function SurahHeader({ surah, onOpenSurahPicker, onSurahClick }: SurahHeaderProps) {
   const juz = getSurahJuzNumber(surah.number);
   const isMeccan = surah.type?.toLowerCase().includes('mecc') || surah.type?.toLowerCase().includes('makk');
   const revelationLabel = isMeccan ? 'Meccan • مكية' : 'Medinan • مدنية';
@@ -22,10 +17,6 @@ export function SurahHeader({ surah, onOpenSurahPicker, onLongPressStart, onLong
       className="surah-header-banner"
       role="banner"
       onClick={onSurahClick ?? onOpenSurahPicker}
-      onPointerDown={onLongPressStart}
-      onPointerUp={onLongPressEnd}
-      onPointerCancel={onLongPressEnd}
-      onContextMenu={(event) => event.preventDefault()}
     >
       <div className="surah-header-ornament-top">
         <span className="ornament-line" />
@@ -38,14 +29,15 @@ export function SurahHeader({ surah, onOpenSurahPicker, onLongPressStart, onLong
           سُورَةُ {surah.nameArabic.replace(/^سُورَةُ\s+|^سورة\s+/i, '')}
         </h1>
         <div className="surah-header-sub">
-          <span className="surah-transliteration">{surah.nameTransliteration}</span>
+          <span className="surah-english-name">{surah.englishName}</span>
+          <span className="surah-transliteration">({surah.nameTransliteration})</span>
         </div>
       </div>
 
       <div className="surah-header-badges">
-        <span className="surah-badge">Surah {toArabicNumerals(surah.number)} ({surah.number})</span>
-        <span className="surah-badge">{toArabicNumerals(surah.totalAyahs)} Ayahs</span>
-        <span className="surah-badge">Juz&apos; {toArabicNumerals(juz)}</span>
+        <span className="surah-badge">Surah {surah.number} (Chapter {surah.number})</span>
+        <span className="surah-badge">{surah.totalAyahs} Ayahs (Verses)</span>
+        <span className="surah-badge">Juz (Part) {juz}</span>
         <span className="surah-badge revelation-badge">{revelationLabel}</span>
       </div>
 

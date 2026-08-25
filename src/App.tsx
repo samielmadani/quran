@@ -34,8 +34,10 @@ import { SurahHeader } from './components/SurahHeader';
 import { ContinueListeningCard } from './components/ContinueListeningCard';
 import { TafsirModal } from './components/TafsirModal';
 import { AyahInfoModal } from './components/AyahInfoModal';
+import { Tutorial } from './components/Tutorial';
 import type { SleepTimerMode } from './types/audio';
 import { audioService } from './services/audioService';
+import { cleanTranslationText } from './services/translationService';
 import './App.css';
 
 const isStandaloneDisplay = () => window.matchMedia('(display-mode: standalone)').matches ||
@@ -51,7 +53,7 @@ const scrollSelectedItem = (container: HTMLElement | null, selector: string) => 
   const itemRect = selected.getBoundingClientRect();
   if (itemRect.top >= 0 && itemRect.bottom <= window.innerHeight) return;
 
-  selected.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  selected.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior });
 };
 
 const formatTimestamp = (ms: number): string => {
@@ -90,6 +92,8 @@ function App() {
     bookmarkedSurahs,
     repeatMode,
     autoPlayOnLaunch,
+    translationMode,
+    autoPlayOnSurahSelection,
     sleepTimerMode,
     sleepTimerRemainingSec,
     downloadProgress,
@@ -104,12 +108,14 @@ function App() {
     setReciterModalOpen,
     setShowContinueCard,
     handleSelectAyah,
+    handleSelectSurah,
     handlePlayPause,
     handleNextAyah,
     handlePreviousAyah,
     handleSelectReciter,
     handleContinueListening,
     handleCycleRepeatMode,
+    handleSetRepeatMode,
     handleSetSleepTimer,
     handleTogglePinned,
     handleToggleShowPrevNext,
@@ -117,26 +123,35 @@ function App() {
     handleToggleShowRecentlyPlayed,
     handleToggleEnableBookmarks,
     handleToggleAutoPlayOnLaunch,
+    handleToggleTranslationMode,
+    handleToggleAutoPlayOnSurahSelection,
     handleToggleBookmark,
   } = useQuranApp();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(() => localStorage.getItem('quran_tutorial_completed') !== 'true');
   const [searchQuery, setSearchQuery] = useState('');
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isEditingBookmarks, setIsEditingBookmarks] = useState(false);
   const [tafsirSelection, setTafsirSelection] = useState<{ surah: number; ayah: number | null } | null>(null);
   const [ayahInfoSelection, setAyahInfoSelection] = useState<{ surah: number; ayah: number } | null>(null);
+  const [ayahTranslations, setAyahTranslations] = useState<Record<number, string>>({});
   const [, setShowExitPrompt] = useState(false);
   const hideControlsTimer = useRef<number | undefined>(undefined);
   const swipeStartY = useRef<number | null>(null);
   const surahListRef = useRef<HTMLDivElement | null>(null);
-  const longPressTimer = useRef<number | null>(null);
-  const longPressTriggered = useRef(false);
   const lastBackPress = useRef(0);
   const overlayState = useRef({ tafsir: false, surah: false, reciter: false, settings: false });
 
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem('quran_install_dismissed') === 'true');
+
+  useEffect(() => {
+    const splash = document.getElementById('startup-splash');
+    splash?.classList.add('hidden');
+    const timer = window.setTimeout(() => splash?.remove(), 300);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform() || isStandaloneDisplay() || !window.matchMedia('(max-width: 768px)').matches) return;
@@ -157,6 +172,11 @@ function App() {
       setInstallDismissed(true);
     }
     setInstallPrompt(null);
+  };
+
+  const completeTutorial = () => {
+    localStorage.setItem('quran_tutorial_completed', 'true');
+    setTutorialOpen(false);
   };
 
   useEffect(() => {
@@ -207,54 +227,15 @@ function App() {
     };
   }, [ayahInfoSelection, setReciterModalOpen, setSurahListOpen]);
 
-  const handleAyahPointerDown = (surahNumber: number, ayahNumber: number) => {
-    longPressTriggered.current = false;
-    if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current);
-    longPressTimer.current = window.setTimeout(() => {
-      longPressTriggered.current = true;
-      setAyahInfoSelection({ surah: surahNumber, ayah: ayahNumber });
-      longPressTimer.current = null;
-    }, 500);
-  };
-
-  const handleAyahPointerUp = () => {
-    if (longPressTimer.current !== null) {
-      window.clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  };
-
   const handleAyahClick = (surahNumber: number, ayahNumber: number) => {
-    if (longPressTriggered.current) {
-      longPressTriggered.current = false;
-      return;
-    }
     handleSelectAyah(surahNumber, ayahNumber);
   };
 
-  const handleSurahPointerDown = (surahNumber: number) => {
-    longPressTriggered.current = false;
-    if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current);
-    longPressTimer.current = window.setTimeout(() => {
-      longPressTriggered.current = true;
-      setTafsirSelection({ surah: surahNumber, ayah: null });
-      longPressTimer.current = null;
-    }, 500);
-  };
-
   const handleSurahClick = (surahNumber: number) => {
-    if (longPressTriggered.current) {
-      longPressTriggered.current = false;
-      return;
-    }
-    dismissModal('surah', () => handleSelectAyah(surahNumber, 1));
+    dismissModal('surah', () => handleSelectSurah(surahNumber));
   };
 
   const handleSurahHeaderClick = () => {
-    if (longPressTriggered.current) {
-      longPressTriggered.current = false;
-      return;
-    }
     openSurahSelector();
   };
 
@@ -315,6 +296,27 @@ function App() {
   };
 
   const surah = surahs.find((item) => item.number === currentSurah) ?? surahs[0];
+  useEffect(() => {
+    if (!translationMode) {
+      setAyahTranslations({});
+      return;
+    }
+    const controller = new AbortController();
+    void fetch(`https://api.quran.com/api/v4/verses/by_chapter/${currentSurah}?translations=20&fields=text_uthmani&per_page=300`, { signal: controller.signal })
+      .then((response) => response.ok ? response.json() as Promise<{ verses?: Array<{ verse_number: number; translations?: Array<{ text?: string }> }> }> : Promise.reject(new Error('Translation request failed')))
+      .then((data) => {
+        const next: Record<number, string> = {};
+        for (const verse of data.verses ?? []) {
+          const text = verse.translations?.[0]?.text?.replace(/<[^>]+>/g, '').trim();
+          if (text) next[verse.verse_number] = cleanTranslationText(text);
+        }
+        setAyahTranslations(next);
+      })
+      .catch((error: unknown) => {
+        if ((error as { name?: string }).name !== 'AbortError') setAyahTranslations({});
+      });
+    return () => controller.abort();
+  }, [currentSurah, translationMode]);
   const filteredSurahs = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase();
     if (!query) return surahs;
@@ -448,12 +450,10 @@ function App() {
               <SurahHeader
                 surah={surah}
                 onOpenSurahPicker={openSurahSelector}
-                onLongPressStart={() => handleSurahPointerDown(surah.number)}
-                onLongPressEnd={handleAyahPointerUp}
                 onSurahClick={handleSurahHeaderClick}
               />
 
-              <div className="quran-flow" dir="rtl" style={{ fontSize: `${textSize}rem` }}>
+              <div className={`quran-flow ${translationMode ? 'translation-mode' : ''}`} dir="rtl" style={{ fontSize: `${textSize}rem` }}>
                 {/* Bismillah Header (Except Surah 9 At-Tawbah) */}
                 {surah.number !== 9 && (
                   <div className="basmala-container">
@@ -461,11 +461,7 @@ function App() {
                       id={`ayah-${surah.number}-${surah.number === 1 ? 1 : 0}`}
                       role="button"
                       tabIndex={0}
-                      className={`ayah basmala-ayah ${currentAyah === (surah.number === 1 ? 1 : 0) ? 'active' : ''} ${tafsirSelection?.surah === surah.number && tafsirSelection.ayah === (surah.number === 1 ? 1 : 0) ? 'tafsir-selected' : ''}`}
-                      onPointerDown={() => handleAyahPointerDown(surah.number, surah.number === 1 ? 1 : 0)}
-                      onPointerUp={handleAyahPointerUp}
-                      onPointerCancel={handleAyahPointerUp}
-                      onContextMenu={(event) => event.preventDefault()}
+                      className={`ayah basmala-ayah ${translationMode ? 'translation-ayah' : ''} ${currentAyah === (surah.number === 1 ? 1 : 0) ? 'active' : ''} ${tafsirSelection?.surah === surah.number && tafsirSelection.ayah === (surah.number === 1 ? 1 : 0) ? 'tafsir-selected' : ''}`}
                       onClick={() => handleAyahClick(surah.number, surah.number === 1 ? 1 : 0)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
@@ -476,6 +472,11 @@ function App() {
                     >
                       <span className="ayah-text basmala-calligraphy">{BASMALA}</span>
                       {surah.number === 1 && <span className="ayah-number">{toArabicNumerals(1)}</span>}
+                      {translationMode && (
+                        <span className="ayah-translation basmala-translation" dir="ltr">
+                          In the name of Allah, the Most Compassionate, the Most Merciful
+                        </span>
+                      )}
                     </span>
                   </div>
                 )}
@@ -484,16 +485,12 @@ function App() {
                 {surah.ayahs
                   .filter((ayah) => !(surah.number === 1 && ayah.number === 1))
                   .map((ayah) => (
-                    <span
+                    <div
                       key={`${surah.number}-${ayah.number}`}
                       id={`ayah-${surah.number}-${ayah.number}`}
                       role="button"
                       tabIndex={0}
-                      className={`ayah ${ayah.number === currentAyah ? 'active' : ''} ${tafsirSelection?.surah === surah.number && tafsirSelection.ayah === ayah.number ? 'tafsir-selected' : ''}`}
-                      onPointerDown={() => handleAyahPointerDown(surah.number, ayah.number)}
-                      onPointerUp={handleAyahPointerUp}
-                      onPointerCancel={handleAyahPointerUp}
-                      onContextMenu={(event) => event.preventDefault()}
+                      className={`ayah ${translationMode ? 'translation-ayah' : ''} ${ayah.number === currentAyah ? 'active' : ''} ${tafsirSelection?.surah === surah.number && tafsirSelection.ayah === ayah.number ? 'tafsir-selected' : ''}`}
                       onClick={() => handleAyahClick(surah.number, ayah.number)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
@@ -504,7 +501,10 @@ function App() {
                     >
                       <span className="ayah-text">{ayah.text}</span>
                       <span className="ayah-number">{toArabicNumerals(ayah.number)}</span>
-                    </span>
+                      {translationMode && ayahTranslations[ayah.number] && (
+                        <span className="ayah-translation" dir="ltr">{ayahTranslations[ayah.number]}</span>
+                      )}
+                    </div>
                   ))}
               </div>
             </div>
@@ -579,6 +579,7 @@ function App() {
 
               {/* Settings Button */}
               <button
+                id="tutorial-settings"
                 className="icon-button settings-button"
                 type="button"
                 onClick={openSettings}
@@ -617,6 +618,7 @@ function App() {
 
               {/* Prominent Play / Pause Button */}
               <button
+                id="tutorial-play"
                 className={`play-button ${isPlaying ? 'is-playing' : ''}`}
                 type="button"
                 onClick={handlePlayPause}
@@ -643,6 +645,7 @@ function App() {
             <div className="toolbar-group toolbar-right">
               {/* Reciter Button */}
               <button
+                id="tutorial-reciter-selector"
                 className="reciter-live-chip"
                 type="button"
                 onClick={openReciterSelector}
@@ -654,6 +657,7 @@ function App() {
               </button>
 
               <button
+                id="tutorial-surah-selector"
                 className="surah-heading-btn"
                 type="button"
                 onClick={openSurahSelector}
@@ -661,8 +665,9 @@ function App() {
               >
                 <div className="surah-info">
                   <span className="surah-heading-arabic">{surah.nameArabic}</span>
+                  <span className="surah-heading-english">{surah.englishName}</span>
                   <span className="surah-heading-latin">
-                    {language === 'ar' ? surah.nameArabic : surah.nameTransliteration} <b>•</b> {toArabicNumerals(currentAyah)}
+                    ({surah.nameTransliteration}) <b>•</b> {toArabicNumerals(currentAyah)}
                   </span>
                 </div>
               </button>
@@ -775,12 +780,13 @@ function App() {
                                 if (isEditingBookmarks) {
                                   handleToggleBookmark(surahNum);
                                 } else {
-                                  dismissModal('surah', () => handleSelectAyah(surahNum, 1));
+                                  dismissModal('surah', () => handleSelectSurah(surahNum));
                                 }
                               }}
                             >
                               <IonIcon icon={heart} className="recent-chip-play gold-heart" />
-                              <span className="recent-chip-title">{language === 'ar' ? itemSurah.nameArabic : itemSurah.nameTransliteration}</span>
+                              <span className="recent-chip-title">{itemSurah.englishName}</span>
+                              <span className="recent-chip-transliteration">({itemSurah.nameTransliteration})</span>
                               <span className="recent-chip-arabic">{itemSurah.nameArabic}</span>
                               {isEditingBookmarks && (
                                 <IonIcon icon={close} className="chip-remove-icon" />
@@ -812,13 +818,14 @@ function App() {
                           type="button"
                           className="recent-chip"
                           onClick={() =>
-                            dismissModal('surah', () => handleSelectAyah(item.surah, item.ayah))
+                            dismissModal('surah', () => handleSelectSurah(item.surah, item.ayah))
                           }
                         >
                           <IonIcon icon={play} className="recent-chip-play" />
                           <span className="recent-chip-title">
-                            {language === 'ar' ? itemSurah.nameArabic : itemSurah.nameTransliteration} {toArabicNumerals(item.ayah)}
+                            {itemSurah.englishName} · Ayah (Verse) {item.ayah}
                           </span>
+                          <span className="recent-chip-transliteration">({itemSurah.nameTransliteration})</span>
                           <span className="recent-chip-arabic">{itemSurah.nameArabic}</span>
                         </button>
                       );
@@ -836,16 +843,13 @@ function App() {
                       <button
                         type="button"
                         className={`surah-option ${currentSurah === surahItem.number ? 'selected' : ''} ${tafsirSelection?.surah === surahItem.number && tafsirSelection.ayah === null ? 'tafsir-selected' : ''}`}
-                        onPointerDown={() => handleSurahPointerDown(surahItem.number)}
-                        onPointerUp={handleAyahPointerUp}
-                        onPointerCancel={handleAyahPointerUp}
-                        onContextMenu={(event) => event.preventDefault()}
                         onClick={() => handleSurahClick(surahItem.number)}
                       >
                         <span className="surah-index-number">{toArabicNumerals(surahItem.number).padStart(3, '٠')}</span>
                         <span className="surah-option-copy">
                           <strong>{surahItem.nameArabic}</strong>
-                          <small>{surahItem.nameTransliteration} · {t.juz} {toArabicNumerals(getSurahJuzNumber(surahItem.number))}</small>
+                          <span className="surah-option-english">{surahItem.englishName}</span>
+                          <small>({surahItem.nameTransliteration}) · {t.juz} {toArabicNumerals(getSurahJuzNumber(surahItem.number))} (Part {getSurahJuzNumber(surahItem.number)})</small>
                         </span>
                         <span className="surah-option-count">{surahItem.totalAyahs} {t.ayahsCount}</span>
                       </button>
@@ -933,6 +937,18 @@ function App() {
 
                 {/* 2. Reciter Card (Big & Clear) */}
                 <div className="driving-section">
+                  <span className="driving-section-title">{t.selectSurah} (Chapter)</span>
+                  <div className="driving-reciter-card">
+                    <div className="driving-reciter-text">
+                      <strong>{surah.nameArabic}</strong>
+                      <span>{surah.englishName} · ({surah.nameTransliteration}) · Surah {surah.number}</span>
+                    </div>
+                    <button type="button" className="reciter-btn activate-btn" onClick={openSurahSelector}>{t.change}</button>
+                  </div>
+                </div>
+
+                {/* 3. Reciter Card (Big & Clear) */}
+                <div className="driving-section">
                   <span className="driving-section-title">{t.reciter}</span>
                   <div className="driving-reciter-card">
                     <div className="driving-reciter-text">
@@ -949,7 +965,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* 3. Player Preferences */}
+                {/* 4. Player Preferences */}
                 <div className="driving-section">
                   <span className="driving-section-title">{t.player}</span>
 
@@ -966,16 +982,21 @@ function App() {
                     </button>
                   </div>
 
-                  <div className="driving-row">
-                    <span className="driving-row-label">{repeatBtnConfig.label}</span>
-                    <button
-                      className={`toggle ${repeatMode !== 'off' ? 'on' : ''}`}
-                      type="button"
-                      onClick={handleCycleRepeatMode}
-                      aria-label={repeatBtnConfig.title}
-                    >
-                      <span />
-                    </button>
+                  <div className="driving-row driving-row-column">
+                    <span className="driving-row-label">{t.repeatMode}</span>
+                    <div className="driving-pills-row">
+                      {[
+                        { id: 'off', label: t.repeatOff },
+                        { id: 'repeat_single', label: t.repeatOnce },
+                        { id: 'repeat_surah', label: t.repeatSurah },
+                        { id: 'continuous', label: t.repeatInfinite },
+                      ].map((option) => (
+                        <button key={option.id} type="button" className={`driving-pill-btn ${repeatMode === option.id ? 'selected' : ''}`} onClick={() => handleSetRepeatMode(option.id as typeof repeatMode)}>
+                          {repeatMode === option.id && <IonIcon icon={checkmarkCircle} />}
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Navigation Chevrons */}
@@ -1007,7 +1028,7 @@ function App() {
                   )}
                 </div>
 
-                {/* 4. Sleep / Stop Timer */}
+                {/* 5. Sleep / Stop Timer */}
                 <div className="driving-section">
                   <div className="driving-section-header">
                     <span className="driving-section-title">{t.sleepTimer}</span>
@@ -1039,7 +1060,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* 5. Reading & Font Size Options */}
+                {/* 6. Reading & Font Size Options */}
                 <div className="driving-section">
                   <span className="driving-section-title">{t.reading}</span>
 
@@ -1082,6 +1103,25 @@ function App() {
                     </button>
                   </div>
 
+                  <div className="driving-row">
+                    <span className="driving-row-label">{t.translationMode}</span>
+                    <button className={`toggle ${translationMode ? 'on' : ''}`} type="button" onClick={handleToggleTranslationMode} aria-pressed={translationMode}>
+                      <span />
+                    </button>
+                  </div>
+
+                  <div className="driving-row">
+                    <span className="driving-row-label">{t.autoPlayOnSurahSelection}</span>
+                    <button className={`toggle ${autoPlayOnSurahSelection ? 'on' : ''}`} type="button" onClick={handleToggleAutoPlayOnSurahSelection} aria-pressed={autoPlayOnSurahSelection}>
+                      <span />
+                    </button>
+                  </div>
+
+                  <div className="driving-row">
+                    <span className="driving-row-label">Replay Tutorial</span>
+                    <button type="button" className="driving-pill-btn" onClick={() => { setSettingsOpen(false); setTutorialOpen(true); }}>Replay</button>
+                  </div>
+
                   {Capacitor.isNativePlatform() && (
                     <div className="driving-row driving-row-with-description">
                       <span className="driving-row-label">
@@ -1107,7 +1147,7 @@ function App() {
                       <div className="stepper compact">
                         <button
                           type="button"
-                          onClick={() => setTextSize((value) => Math.max(1.4, Number((value - 0.1).toFixed(1))))}
+                          onClick={() => setTextSize((value) => Math.max(0.6, Number((value - 0.1).toFixed(1))))}
                           aria-label="Decrease text size"
                         >
                           <IonIcon icon={remove} />
@@ -1115,7 +1155,7 @@ function App() {
                         <span>{textSize.toFixed(1)}</span>
                         <button
                           type="button"
-                          onClick={() => setTextSize((value) => Math.min(5.5, Number((value + 0.1).toFixed(1))))}
+                          onClick={() => setTextSize((value) => Math.min(3.0, Number((value + 0.1).toFixed(1))))}
                           aria-label="Increase text size"
                         >
                           <IonIcon icon={add} />
@@ -1170,6 +1210,8 @@ function App() {
           ayahNumber={ayahInfoSelection?.ayah ?? null}
           onClose={() => setAyahInfoSelection(null)}
         />
+
+        {tutorialOpen && <Tutorial onComplete={completeTutorial} />}
 
         <IonToast
           isOpen={false}

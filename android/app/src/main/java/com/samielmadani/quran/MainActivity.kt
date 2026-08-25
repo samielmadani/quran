@@ -12,12 +12,6 @@ import androidx.activity.OnBackPressedCallback
 import com.getcapacitor.BridgeActivity
 
 class MainActivity : BridgeActivity() {
-    private fun applyImmersiveMode() {
-        val controller = WindowInsetsControllerCompat(window, window.decorView)
-        controller.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         registerPlugin(QuranAudioPlugin::class.java)
         super.onCreate(savedInstanceState)
@@ -45,7 +39,6 @@ class MainActivity : BridgeActivity() {
         // Ensure light icons on dark background
         controller.isAppearanceLightStatusBars = false
         controller.isAppearanceLightNavigationBars = false
-        applyImmersiveMode()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
@@ -53,8 +46,4 @@ class MainActivity : BridgeActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        applyImmersiveMode()
-    }
 }

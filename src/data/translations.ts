@@ -62,6 +62,15 @@ export interface Translations {
   autoScroll: string;
   autoPlayOnLaunch: string;
   autoPlayOnLaunchDescription: string;
+  translationMode: string;
+  autoPlayOnSurahSelection: string;
+  repeatMode: string;
+  repeatOff: string;
+  repeatOnce: string;
+  repeatTwo: string;
+  repeatThree: string;
+  repeatFive: string;
+  repeatInfinite: string;
   fontSize: string;
   
   // Sleep Timer Options
@@ -112,19 +121,19 @@ export const translations: Record<AppLanguage, Translations> = {
     quickControls: 'Quick Controls',
     
     quranIndex: 'Quran Index',
-    selectSurah: 'Select Surah',
+    selectSurah: 'Select Surah (Chapter)',
     searchSurahPlaceholder: 'Search surah by name or number',
     clearSearch: 'Clear search',
     bookmarked: 'Bookmarked',
     recentlyPlayed: 'Recently Played',
     noBookmarksYet: 'No bookmarks yet. Tap Edit to add.',
     tapToBookmarkHint: 'Tap hearts below to bookmark surahs',
-    ayahsCount: 'ayahs',
-    juz: 'Juz\'',
+    ayahsCount: 'Ayahs (Verses)',
+    juz: 'Juz',
     
     continueListening: 'Continue Listening',
     resume: 'RESUME',
-    ayah: 'Ayah',
+    ayah: 'Ayah (Verse)',
     
     play: 'Play',
     pause: 'Pause',
@@ -132,7 +141,7 @@ export const translations: Record<AppLanguage, Translations> = {
     nextAyah: 'Next ayah',
     autoplay: 'Auto',
     repeatAyah: '1×',
-    repeatSurah: 'Surah',
+    repeatSurah: 'Surah (Chapter)',
     autoplayOff: 'Off',
     settings: 'Settings',
     selectReciter: 'Select reciter',
@@ -156,6 +165,15 @@ export const translations: Record<AppLanguage, Translations> = {
     autoScroll: 'Auto-scroll',
     autoPlayOnLaunch: 'Auto-play on app launch',
     autoPlayOnLaunchDescription: 'Automatically resume Quran playback when the native Android app launches.',
+    translationMode: 'Translation Mode',
+    autoPlayOnSurahSelection: 'Auto-play on surah selection',
+    repeatMode: 'Auto Repeat',
+    repeatOff: 'Off',
+    repeatOnce: 'Once',
+    repeatTwo: '2 times',
+    repeatThree: '3 times',
+    repeatFive: '5 times',
+    repeatInfinite: 'Infinite',
     fontSize: 'Font Size',
     
     timerOff: 'Off',
@@ -245,6 +263,15 @@ export const translations: Record<AppLanguage, Translations> = {
     autoScroll: 'التمرير التلقائي مع التلاوة',
     autoPlayOnLaunch: 'التشغيل التلقائي عند فتح التطبيق',
     autoPlayOnLaunchDescription: 'استئناف تلاوة القرآن تلقائياً عند فتح تطبيق أندرويد الأصلي.',
+    translationMode: 'وضع الترجمة',
+    autoPlayOnSurahSelection: 'التشغيل التلقائي عند اختيار السورة',
+    repeatMode: 'التكرار التلقائي',
+    repeatOff: 'إيقاف',
+    repeatOnce: 'مرة واحدة',
+    repeatTwo: 'مرتان',
+    repeatThree: '٣ مرات',
+    repeatFive: '٥ مرات',
+    repeatInfinite: 'بلا نهاية',
     fontSize: 'حجم الخط',
     
     timerOff: 'إيقاف',
