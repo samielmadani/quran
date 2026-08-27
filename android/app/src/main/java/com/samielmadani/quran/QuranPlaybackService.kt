@@ -66,6 +66,7 @@ class QuranPlaybackService : MediaSessionService() {
     private var currentSurah = 1
     private var currentAyah = 1
     private var pendingSeekMs: Long? = null
+    private var pendingPlay = false
     private var eventListener: ((NativePlaybackState) -> Unit)? = null
     private var repeatSingle = false
     private var repeatMode = "continuous"
@@ -264,12 +265,17 @@ class QuranPlaybackService : MediaSessionService() {
     }
 
     fun playAyah(surah: Int, ayah: Int, positionMs: Long? = null) {
+        pendingPlay = true
         val range = timingData[surah]?.get(ayah)
         currentSurah = surah
         currentAyah = ayah
         val startMs = positionMs ?: range?.startMs ?: 0L
         pendingSeekMs = startMs
-        val mediaId = "${activeReciterId}_${surah}_ayah"
+        val mediaId = if (isPerAyahReciter(activeReciterId)) {
+            "${activeReciterId}_${surah}_${ayah}"
+        } else {
+            "${activeReciterId}_${surah}"
+        }
 
         if (player.currentMediaItem?.mediaId == mediaId) {
             player.seekTo(startMs)
@@ -382,11 +388,13 @@ class QuranPlaybackService : MediaSessionService() {
     }
 
     fun pause() {
+        pendingPlay = false
         player.pause()
         persistState()
     }
 
     fun resume() {
+        pendingPlay = true
         if (player.currentMediaItem == null) {
             playAyah(currentSurah, currentAyah)
         } else {
@@ -455,8 +463,8 @@ class QuranPlaybackService : MediaSessionService() {
 
         val previousSurah = currentSurah - 1
         if (previousSurah >= 1 && (isPerAyahReciter(activeReciterId) || timingData[previousSurah] != null)) {
-            val lastAyah = timingData[previousSurah]!!.keys.filter { it > 0 }.maxOrNull()
-            if (lastAyah != null) playAyah(previousSurah, lastAyah)
+            val lastAyah = timingData[previousSurah]?.keys?.filter { it > 0 }?.maxOrNull()
+            playAyah(previousSurah, lastAyah ?: 1)
         }
     }
 
@@ -493,6 +501,10 @@ class QuranPlaybackService : MediaSessionService() {
 
     private val positionPoller = object : Runnable {
         override fun run() {
+            if (!player.isPlaying) {
+                handler.postDelayed(this, 250)
+                return
+            }
             val position = player.currentPosition
             val pendingStart = pendingSeekMs
             if (pendingStart != null && position < pendingStart) {
@@ -662,7 +674,10 @@ class QuranPlaybackService : MediaSessionService() {
     }
 
     private fun applyPendingSeek() {
-        pendingSeekMs?.let { player.seekTo(it); player.play() }
+        pendingSeekMs?.let {
+            player.seekTo(it)
+            if (pendingPlay) player.play() else player.pause()
+        }
     }
 
     private fun loadTimingData() {

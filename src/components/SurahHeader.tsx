@@ -27,11 +27,11 @@ export function SurahHeader({ surah, onOpenSurahPicker, onSurahClick, onOpenTafs
 
       <div className="surah-header-main">
         <h1 className="surah-header-title-arabic" lang="ar" dir="rtl">
-          سُورَةُ {surah.nameArabic.replace(/^سُورَةُ\s+|^سورة\s+/i, '')}
+          {surah.nameArabic.replace(/^سُورَةُ\s+|^سورة\s+/i, '')}
         </h1>
         <div className="surah-header-sub">
           <span className="surah-english-name">{surah.englishName}</span>
-          <span className="surah-transliteration">({surah.nameTransliteration})</span>
+          <span className="surah-transliteration"> ({surah.nameTransliteration})</span>
         </div>
       </div>
 

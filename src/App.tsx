@@ -240,7 +240,7 @@ function App() {
   };
 
   const handleOpenSurahTafsir = () => {
-    setTafsirSelection({ surah: surah.number, ayah: null });
+    setTafsirSelection({ surah: surah.number, ayah: Math.max(1, currentAyah) });
   };
 
   const scheduleControlsHide = useCallback(() => {
@@ -850,9 +850,9 @@ function App() {
                         className={`surah-option ${currentSurah === surahItem.number ? 'selected' : ''} ${tafsirSelection?.surah === surahItem.number && tafsirSelection.ayah === null ? 'tafsir-selected' : ''}`}
                         onClick={() => handleSurahClick(surahItem.number)}
                       >
-                        <span className="surah-index-number">{toArabicNumerals(surahItem.number).padStart(3, '٠')}</span>
                         <span className="surah-option-copy">
                           <strong>{surahItem.nameArabic}</strong>
+                          <span className="surah-index-number">({surahItem.number}) {toArabicNumerals(surahItem.number)}</span>
                           <span className="surah-option-english">{surahItem.englishName}</span>
                           <small>({surahItem.nameTransliteration}) · {t.juz} {toArabicNumerals(getSurahJuzNumber(surahItem.number))} (Part {getSurahJuzNumber(surahItem.number)})</small>
                         </span>
@@ -1203,7 +1203,6 @@ function App() {
 
         <TafsirModal
           isOpen={tafsirSelection !== null}
-          mode={tafsirSelection?.ayah === null ? 'surah' : 'ayah'}
           surah={tafsirSelection ? surahs.find((item) => item.number === tafsirSelection.surah) : undefined}
           ayahNumber={tafsirSelection?.ayah ?? null}
           onClose={() => setTafsirSelection(null)}
