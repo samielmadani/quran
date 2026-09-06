@@ -3,6 +3,11 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+def defaultVersionCode = 8
+def defaultVersionName = '1.0.8'
+def configuredVersionCode = project.findProperty('versionCode')
+def configuredVersionName = project.findProperty('versionName')
+
 android {
     namespace 'com.samielmadani.quran'
     compileSdk 36
@@ -37,8 +42,8 @@ android {
         applicationId 'com.samielmadani.quran'
         minSdk 26
         targetSdk 36
-        versionCode 8
-        versionName '1.0.8'
+        versionCode configuredVersionCode ? configuredVersionCode.toInteger() : defaultVersionCode
+        versionName configuredVersionName ?: defaultVersionName
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 

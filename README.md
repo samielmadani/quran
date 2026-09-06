@@ -91,7 +91,7 @@ configuring Play App Signing in Play Console.
 
 ## Download the Android app
 
-GitHub Actions builds the APK on manual runs and for version tags matching `v*`. The latest committed APK is available at `artifacts/quran-latest.apk`; users can also download the `quran-latest-apk` workflow artifact or the APK attached to a tagged GitHub Release.
+GitHub Actions builds an APK on every push to `main` and on manual runs. It creates or updates a GitHub Release tagged `v<versionName>` and attaches an APK named `quran-<versionName>.apk`. Releases are built unsigned unless all four signing values above are supplied as GitHub Actions secrets; configure those secrets before distributing a production APK through Google Play.
 
 ## Android run
 

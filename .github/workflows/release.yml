@@ -1,0 +1,146 @@
+name: Android release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
+      - name: Build web assets and sync Capacitor
+        run: npm run build && npx cap sync android
+
+      - name: Select release version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          base_version="$(sed -nE "s/^[[:space:]]*def defaultVersionName = '([^']+)'.*/\1/p" android/app/build.gradle | head -n 1)"
+          base_code="$(sed -nE "s/^[[:space:]]*def defaultVersionCode = ([0-9]+).*/\1/p" android/app/build.gradle | head -n 1)"
+          if [[ -z "$base_version" || -z "$base_code" ]]; then
+            echo 'Unable to read the Android base version from android/app/build.gradle.' >&2
+            exit 1
+          fi
+
+          releases="$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100")"
+          existing_tag="$(jq -r --arg sha "$GITHUB_SHA" '[.[] | select((.body // "") | contains($sha)) | .tag_name] | first // empty' <<< "$releases")"
+
+          if [[ -n "$existing_tag" ]]; then
+            version_name="${existing_tag#v}"
+          else
+            tags="$(gh api "repos/${GITHUB_REPOSITORY}/tags?per_page=100" --jq '.[].name' || true)"
+            highest_tag="$(printf '%s\n%s\n' "$tags" "$(jq -r '.[].tag_name' <<< "$releases")" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+            version_name="$base_version"
+            if [[ -n "$highest_tag" ]]; then
+              highest_version="${highest_tag#v}"
+              if [[ "$(printf '%s\n%s\n' "$version_name" "$highest_version" | sort -V | tail -n 1)" == "$highest_version" ]]; then
+                IFS=. read -r major minor patch <<< "$highest_version"
+                version_name="${major}.${minor}.$((patch + 1))"
+              fi
+            fi
+
+            while grep -qx "v${version_name}" <<< "$tags"; do
+              IFS=. read -r major minor patch <<< "$version_name"
+              version_name="${major}.${minor}.$((patch + 1))"
+            done
+          fi
+
+          IFS=. read -r base_major base_minor base_patch <<< "$base_version"
+          IFS=. read -r release_major release_minor release_patch <<< "$version_name"
+          version_code=$((base_code + release_patch - base_patch))
+          if (( version_code < base_code )); then
+            version_code="$base_code"
+          fi
+
+          {
+            echo "version_name=$version_name"
+            echo "version_code=$version_code"
+            echo "tag=v${version_name}"
+            echo "existing_tag=$existing_tag"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build release APK
+        run: |
+          chmod +x android/gradlew
+          android/gradlew :app:assembleRelease \
+            -PversionName="${{ steps.version.outputs.version_name }}" \
+            -PversionCode="${{ steps.version.outputs.version_code }}"
+
+      - name: Prepare APK
+        id: apk
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk_path="$(find android/app/build/outputs/apk -type f -name '*.apk' ! -name '*-androidTest.apk' | sort | head -n 1)"
+          if [[ -z "$apk_path" ]]; then
+            echo 'No release APK was produced.' >&2
+            exit 1
+          fi
+          output_path="android/app/build/outputs/apk/release/quran-${{ steps.version.outputs.version_name }}.apk"
+          cp "$apk_path" "$output_path"
+          echo "path=$output_path" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          APK_PATH: ${{ steps.apk.outputs.path }}
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          build_date="$(date -u +'%Y-%m-%d')"
+          notes="$(cat <<EOF
+          Version: ${VERSION_NAME}
+          Commit SHA: ${GITHUB_SHA}
+          Build date: ${build_date}
+          APK: quran-${VERSION_NAME}.apk
+          EOF
+          )"
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$APK_PATH" --clobber
+          else
+            gh release create "$RELEASE_TAG" "$APK_PATH" \
+              --target "$GITHUB_SHA" \
+              --title "Quran ${VERSION_NAME}" \
+              --notes "$notes" \
+              --generate-notes
+          fi
