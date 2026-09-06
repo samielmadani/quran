@@ -97,9 +97,10 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build release APK
+        working-directory: android
         run: |
-          chmod +x android/gradlew
-          android/gradlew :app:assembleRelease \
+          chmod +x gradlew
+          ./gradlew :app:assembleRelease \
             -PversionName="${{ steps.version.outputs.version_name }}" \
             -PversionCode="${{ steps.version.outputs.version_code }}"
 
