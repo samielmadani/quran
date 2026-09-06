@@ -117,6 +117,11 @@ class QuranPlaybackService : MediaSessionService() {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     emitState()
                 }
+
+                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                    pendingPlay = false
+                    emitState()
+                }
             })
         }
         mediaSession = MediaSession.Builder(this, player)
@@ -492,7 +497,7 @@ class QuranPlaybackService : MediaSessionService() {
     }
 
     fun state() = NativePlaybackState(
-        player.isPlaying,
+        player.isPlaying || (pendingPlay && player.playbackState == Player.STATE_BUFFERING),
         currentSurah,
         currentAyah,
         player.currentPosition,
