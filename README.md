@@ -67,7 +67,7 @@ properties before running the release command:
 - `RELEASE_KEY_ALIAS`: key alias
 - `RELEASE_KEY_PASSWORD`: key password
 
-Android Studio is not required. With the JDK already installed, create a new
+Android Studio is not required. With JDK 21 already installed, create a new
 upload keystore from PowerShell with:
 
 ```powershell
