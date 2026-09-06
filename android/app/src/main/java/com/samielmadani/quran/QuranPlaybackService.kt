@@ -497,7 +497,7 @@ class QuranPlaybackService : MediaSessionService() {
     }
 
     fun state() = NativePlaybackState(
-        player.isPlaying || (pendingPlay && player.playbackState == Player.STATE_BUFFERING),
+        player.isPlaying || pendingPlay,
         currentSurah,
         currentAyah,
         player.currentPosition,
@@ -681,6 +681,7 @@ class QuranPlaybackService : MediaSessionService() {
     private fun applyPendingSeek() {
         pendingSeekMs?.let {
             player.seekTo(it)
+            pendingSeekMs = null
             if (pendingPlay) player.play() else player.pause()
         }
     }
