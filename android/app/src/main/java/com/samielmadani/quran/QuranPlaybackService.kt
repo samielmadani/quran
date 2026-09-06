@@ -249,7 +249,6 @@ class QuranPlaybackService : MediaSessionService() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        if (!player.isPlaying) stopSelf()
         super.onTaskRemoved(rootIntent)
     }
 
