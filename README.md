@@ -91,7 +91,7 @@ configuring Play App Signing in Play Console.
 
 ## Download the Android app
 
-GitHub Actions builds an APK on every push to `main` and on manual runs. It creates or updates a GitHub Release tagged `v<versionName>` and attaches an APK named `quran-<versionName>.apk`. Releases are built unsigned unless all four signing values above are supplied as GitHub Actions secrets; configure those secrets before distributing a production APK through Google Play.
+GitHub Actions builds a signed debug APK on every push to `main` and on manual runs. It creates or updates a GitHub Release tagged `v<versionName>` and attaches an APK named `quran-<versionName>.apk` that can be sideloaded onto Android devices. This APK is not suitable for Google Play; use the locally configured release signing flow for production distribution.
 
 ## Android run
 

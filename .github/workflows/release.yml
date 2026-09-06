@@ -96,11 +96,11 @@ jobs:
             echo "existing_tag=$existing_tag"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Build release APK
+      - name: Build installable APK
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew :app:assembleRelease \
+          ./gradlew :app:assembleDebug \
             -PversionName="${{ steps.version.outputs.version_name }}" \
             -PversionCode="${{ steps.version.outputs.version_code }}"
 
@@ -109,12 +109,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          apk_path="$(find android/app/build/outputs/apk -type f -name '*.apk' ! -name '*-androidTest.apk' | sort | head -n 1)"
-          if [[ -z "$apk_path" ]]; then
-            echo 'No release APK was produced.' >&2
+          apk_path="android/app/build/outputs/apk/debug/app-debug.apk"
+          if [[ ! -f "$apk_path" ]]; then
+            echo 'No installable APK was produced.' >&2
             exit 1
           fi
-          output_path="android/app/build/outputs/apk/release/quran-${{ steps.version.outputs.version_name }}.apk"
+          output_path="android/app/build/outputs/apk/debug/quran-${{ steps.version.outputs.version_name }}.apk"
           cp "$apk_path" "$output_path"
           echo "path=$output_path" >> "$GITHUB_OUTPUT"
 
