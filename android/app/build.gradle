@@ -3,10 +3,11 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-def defaultVersionCode = 8
-def defaultVersionName = '1.0.8'
+def defaultVersionCode = 9
+def defaultVersionName = '1.0.9'
 def configuredVersionCode = project.findProperty('versionCode')
 def configuredVersionName = project.findProperty('versionName')
+def releaseTaskRequested = gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
 
 android {
     namespace 'com.samielmadani.quran'
@@ -53,6 +54,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (configuredSigningProperties.size() == releaseSigningProperties.size()) {
                 signingConfig signingConfigs.release
+            } else if (releaseTaskRequested) {
+                throw new GradleException('Release builds require RELEASE_STORE_FILE, RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, and RELEASE_KEY_PASSWORD.')
             }
         }
     }

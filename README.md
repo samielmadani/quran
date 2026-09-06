@@ -59,13 +59,17 @@ npm run build:android:release
 This builds the web app, syncs Capacitor, assembles the release APK and App Bundle,
 and copies them to `artifacts/quran-latest.apk` and `artifacts/quran-latest.aab`.
 
-Release signing is opt-in. Set all four values as environment variables or Gradle
-properties before running the release command:
+Release signing is required. Set all four values as environment variables or
+Gradle properties before running the release command:
 
 - `RELEASE_STORE_FILE`: path to the existing keystore
 - `RELEASE_STORE_PASSWORD`: keystore password
 - `RELEASE_KEY_ALIAS`: key alias
 - `RELEASE_KEY_PASSWORD`: key password
+
+The GitHub Actions workflow uses the same key on every release. Configure these
+repository secrets: `RELEASE_STORE_BASE64` (the base64-encoded keystore),
+`RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, and `RELEASE_KEY_PASSWORD`.
 
 Android Studio is not required. With JDK 21 already installed, create a new
 upload keystore from PowerShell with:
@@ -91,7 +95,7 @@ configuring Play App Signing in Play Console.
 
 ## Download the Android app
 
-GitHub Actions builds a signed debug APK on every push to `main` and on manual runs. It creates or updates a GitHub Release tagged `v<versionName>` and attaches an APK named `quran-<versionName>.apk` that can be sideloaded onto Android devices. This APK is not suitable for Google Play; use the locally configured release signing flow for production distribution.
+GitHub Actions builds a production-signed release APK on every push to `main` and on manual runs. It creates or updates a GitHub Release tagged `v<versionName>` and attaches an APK named `quran-<versionName>.apk` that can be installed and updated on Android devices. Configure the same release keystore for every run; changing the signing key requires uninstalling the previous app once.
 
 ## Android run
 
