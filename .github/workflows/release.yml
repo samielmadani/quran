@@ -118,11 +118,21 @@ jobs:
           cp "$apk_path" "$output_path"
           echo "path=$output_path" >> "$GITHUB_OUTPUT"
 
+      - name: Prepare app icon
+        id: icon
+        shell: bash
+        run: |
+          set -euo pipefail
+          icon_path="android/app/build/outputs/apk/debug/elmadani-app-icon.png"
+          cp public/icon-512.png "$icon_path"
+          echo "path=$icon_path" >> "$GITHUB_OUTPUT"
+
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
           APK_PATH: ${{ steps.apk.outputs.path }}
+          ICON_PATH: ${{ steps.icon.outputs.path }}
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
         shell: bash
         run: |
@@ -137,9 +147,9 @@ jobs:
           )"
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" "$APK_PATH" --clobber
+            gh release upload "$RELEASE_TAG" "$APK_PATH" "$ICON_PATH" --clobber
           else
-            gh release create "$RELEASE_TAG" "$APK_PATH" \
+            gh release create "$RELEASE_TAG" "$APK_PATH" "$ICON_PATH" \
               --target "$GITHUB_SHA" \
               --title "Quran ${VERSION_NAME}" \
               --notes "$notes" \
