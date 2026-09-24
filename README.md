@@ -1,108 +1,58 @@
-# Quran PWA
+# Quran
 
-This project is structured for a complete offline-first Quran app built with Ionic, React, TypeScript, PWA, and Capacitor for Android automotive head units.
+> An offline-first Quran reader and audio companion for the web and Android.
 
-## Local audio placement
+## ✨ Why this app?
 
-Place the 114 Badr Al-Turki MP3 files in the following folder:
+Quran keeps reading, listening, and personal study in one focused interface. Quran text is bundled locally, while the PWA shell can be cached for offline use, making the core reading experience dependable without a live data connection.
 
-assets/audio/badr-al-turki/
+## 📲 How to install
 
-The application expects them to be named deterministically as:
+Download the latest Android APK from the [GitHub Releases page](https://github.com/samielmadani/quran/releases/latest).
 
-- 001.mp3
-- 002.mp3
-- 003.mp3
-- ...
-- 114.mp3
+1. Download the `.apk` file on Android.
+2. Allow your browser or file manager to install unknown apps if prompted.
+3. Open the APK and tap **Install**.
 
-PUT THE 114 BADR AL-TURKI MP3 FILES HERE
+The browser version can also be run locally with the development command below.
 
-## Ayah timing metadata
+## 🔧 Features
 
-The local ayah timings are generated from the Badr Al-Turki protobuf timing dataset:
+- **Quran reader** — browse surahs and ayahs with adjustable text size.
+- **Audio playback** — play ayahs and surahs with selectable reciters, repeat modes, auto-scroll, and a sleep timer.
+- **Study tools** — bookmarks, pinned ayahs, search, translations, tafsir, and ayah information views.
+- **Listening continuity** — resume the last session and review recently played surahs.
+- **Offline-first shell** — bundled Quran data and a service worker for the PWA app shell.
+- **Android delivery** — Capacitor packaging for Android, with native audio integration prepared in the project.
+- **Arabic typography** — bundled Amiri font styles for Quran text.
+
+## 🎧 Local audio
+
+Place the 114 Badr Al-Turki files in `assets/audio/badr-al-turki/` using the names `001.mp3` through `114.mp3`. Ayah timing data is prepared and validated with:
 
 ```bash
 npm run timings:prepare
 ```
 
-This downloads the 114 source files into `data/badr-al-turki/`, generates the bundled `src/data/badrAlTurkiTimings.ts`, and validates ayah counts and timestamp ranges. Runtime playback reads only the generated local file and bundled MP3s; it does not make timing-data network requests.
-
-## Offline-first architecture
-
-- Quran text is bundled locally in the app.
-- The PWA service worker caches the app shell for offline use.
-- Native Android audio integration is prepared through Capacitor for a Media3/ExoPlayer implementation.
-- No remote font, API, audio, or Quran data is required during normal use.
-
-## Development
+## 🛠️ Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Android builds
+Build the debug Android APK with:
 
 ```bash
 npm run build:apk
 ```
 
-This existing command builds the debug APK and copies it to `artifacts/quran-latest.apk`.
+The APK is copied to `artifacts/quran-latest.apk`. Release APK and App Bundle builds use `npm run build:android:release` and require the configured signing values described in the repository's Android build setup.
 
-For release APK and App Bundle outputs, run:
+## 📸 Screenshots
 
-```bash
-npm run build:android:release
-```
+Screenshots can be added here once the current reader and player flows have been captured on web and Android.
 
-This builds the web app, syncs Capacitor, assembles the release APK and App Bundle,
-and copies them to `artifacts/quran-latest.apk` and `artifacts/quran-latest.aab`.
+## 📜 License
 
-Release signing is required. Set all four values as environment variables or
-Gradle properties before running the release command:
-
-- `RELEASE_STORE_FILE`: path to the existing keystore
-- `RELEASE_STORE_PASSWORD`: keystore password
-- `RELEASE_KEY_ALIAS`: key alias
-- `RELEASE_KEY_PASSWORD`: key password
-
-The GitHub Actions workflow uses the same key on every release. Configure these
-repository secrets: `RELEASE_STORE_BASE64` (the base64-encoded keystore),
-`RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, and `RELEASE_KEY_PASSWORD`.
-
-Android Studio is not required. With JDK 21 already installed, create a new
-upload keystore from PowerShell with:
-
-```powershell
-keytool -genkeypair -v -keystore "$env:USERPROFILE\\quran-upload.keystore" -alias quran-upload -keyalg RSA -keysize 2048 -validity 10000
-```
-
-Choose and record the passwords when prompted. The resulting values are:
-`RELEASE_STORE_FILE` is `%USERPROFILE%\\quran-upload.keystore`,
-`RELEASE_KEY_ALIAS` is `quran-upload`, and the two password values are the
-passwords you chose. Keep the keystore and passwords private and backed up.
-If this app is already registered in Google Play, use the existing upload key
-instead of creating a new one.
-
-For local Gradle properties, use the user-level Gradle file at
-`%USERPROFILE%\\.gradle\\gradle.properties`; do not commit these values. Without
-all four values, Gradle may produce unsigned intermediates, but the release npm
-command stops before copying them into `artifacts/`. Partial configuration also
-fails rather than silently producing an unexpectedly signed artifact. The bundle
-is suitable for Google Play only after signing with your real upload key and
-configuring Play App Signing in Play Console.
-
-## Download the Android app
-
-GitHub Actions builds a production-signed release APK on every push to `main` and on manual runs. It creates or updates a GitHub Release tagged `v<versionName>` and attaches an APK named `quran-<versionName>.apk` that can be installed and updated on Android devices. Configure the same release keystore for every run; changing the signing key requires uninstalling the previous app once.
-
-## Android run
-
-```bash
-npm run cap:open
-```
-
-## Notes
-
-The project is prepared for local Quran text and Badr Al-Turki MP3s to be placed directly inside the app bundle. The app will map surah numbers to the matching MP3 file names.
+No license file is currently included in this repository.
